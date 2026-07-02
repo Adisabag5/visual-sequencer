@@ -1,0 +1,6 @@
+/* Glass instrument card — glassmorphism the utilities can't express cleanly. */
+.instrument-card {
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+}

@@ -7,47 +7,57 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:angular-starter-template": "node dist/angular-starter-template/server/server.mjs",
     "lint": "ng lint",
+    "e2e": "playwright test",
     "prepare": "husky"
   },
   "private": true,
-  "packageManager": "npm@11.11.0",
+  "packageManager": "pnpm@11.9.0",
   "dependencies": {
-    "@angular/common": "^21.2.0",
-    "@angular/compiler": "^21.2.0",
-    "@angular/core": "^21.2.0",
-    "@angular/forms": "^21.2.0",
-    "@angular/platform-browser": "^21.2.0",
-    "@angular/platform-server": "^21.2.0",
-    "@angular/router": "^21.2.0",
-    "@angular/ssr": "^21.2.14",
-    "express": "^5.1.0",
+    "@angular/common": "^22.0.4",
+    "@angular/compiler": "^22.0.4",
+    "@angular/core": "^22.0.4",
+    "@angular/forms": "^22.0.4",
+    "@angular/platform-browser": "^22.0.4",
+    "@angular/router": "^22.0.4",
     "rxjs": "~7.8.0",
+    "tone": "^15.1.22",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^21.2.14",
-    "@angular/cli": "^21.2.14",
-    "@angular/compiler-cli": "^21.2.0",
+    "@angular/build": "^22.0.4",
+    "@angular/cli": "^22.0.4",
+    "@angular/compiler-cli": "^22.0.4",
     "@eslint/js": "^10.0.1",
-    "@types/express": "^5.0.1",
+    "@playwright/test": "^1.61.1",
+    "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20.17.19",
-    "angular-eslint": "21.4.0",
+    "angular-eslint": "22.0.0",
     "eslint": "^10.3.0",
     "husky": "^9.1.7",
     "jsdom": "^28.0.0",
     "lint-staged": "^17.0.7",
+    "postcss": "^8.5.16",
     "prettier": "^3.8.1",
     "stylelint": "^17.13.0",
     "stylelint-config-standard-scss": "^17.0.0",
-    "typescript": "~5.9.2",
-    "typescript-eslint": "8.59.2",
+    "tailwindcss": "^4.3.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "8.62.0",
     "vitest": "^4.0.8"
   },
   "lint-staged": {
-    "*.ts": ["eslint --fix", "prettier --write"],
-    "*.html": ["eslint --fix", "prettier --write"],
-    "*.scss": ["stylelint --fix", "prettier --write"]
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.html": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.scss": [
+      "stylelint --fix",
+      "prettier --write"
+    ]
   }
 }

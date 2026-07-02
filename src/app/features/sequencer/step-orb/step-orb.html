@@ -1,0 +1,35 @@
+<button
+  type="button"
+  class="relative aspect-square w-full cursor-pointer rounded-full transition-all duration-100 ease-out"
+  [class.opacity-30]="muted() && step().on"
+  [style.background]="orb().background"
+  [style.box-shadow]="orb().shadow"
+  [style.transform]="orb().transform"
+  [attr.aria-pressed]="step().on"
+  aria-label="Toggle step"
+  (click)="onClick()"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+  (wheel)="onWheel($event)"
+  (contextmenu)="onReset($event)"
+>
+  @if (showNotch()) {
+    <span
+      class="pointer-events-none absolute inset-0 flex justify-center"
+      [style.transform]="'rotate(' + notchAngle() + 'deg)'"
+    >
+      <span
+        class="mt-[3px] h-[9px] w-[2px] rounded-full"
+        style="background: var(--color-accent)"
+      ></span>
+    </span>
+  }
+  @if (dragging()) {
+    <span
+      class="pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 rounded bg-ink px-1.5 py-0.5 font-mono text-[10px] font-bold text-white"
+    >
+      {{ pitchLabel() }}
+    </span>
+  }
+</button>

@@ -1,0 +1,38 @@
+<main class="flex min-h-screen w-full justify-center px-8 pb-16 pt-12">
+  <div class="flex w-full max-w-[980px] flex-col">
+    <!-- Header -->
+    <header class="mb-[26px] flex items-end justify-between">
+      <div>
+        <p class="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-eyebrow">
+          Audiovisual Sequencer
+        </p>
+        <h1 class="text-[38px] font-bold leading-none tracking-[-0.02em] text-ink">Pulse</h1>
+      </div>
+      <p class="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-mono">
+        8 sounds · 16 steps
+      </p>
+    </header>
+
+    <!-- Instrument card: Transport → Step grid → Visualizer -->
+    <div class="instrument-card overflow-hidden rounded-3xl">
+      <app-transport-bar
+        (togglePlay)="onTogglePlay()"
+        (bpmDelta)="onBpmDelta($event)"
+        (clearPattern)="onClear()"
+      />
+      <app-grid
+        (stepToggle)="onToggleStep($event)"
+        (muteToggle)="onToggleMute($event)"
+        (soloToggle)="onToggleSolo($event)"
+        (volumeChange)="onVolume($event)"
+        (pitchChange)="onPitch($event)"
+      />
+      <app-visualizer />
+    </div>
+
+    <!-- Footer note -->
+    <p class="mx-1 mt-[18px] font-mono text-[12.5px] leading-normal text-mono">
+      Hit Play to start the audio · click cells to program · clear · ±BPM · mute per row.
+    </p>
+  </div>
+</main>

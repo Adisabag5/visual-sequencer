@@ -14,10 +14,11 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should render the sequencer page', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, angular-starter-template');
+    expect(compiled.querySelector('app-sequencer-page')).not.toBeNull();
+    expect(compiled.querySelector('h1')?.textContent).toContain('Pulse');
   });
 });

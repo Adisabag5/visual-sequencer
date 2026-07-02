@@ -42,3 +42,14 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# pnpm
+/.pnpm-store
+
+# Playwright
+/test-results
+/playwright-report
+/playwright/.cache
+
+# Playwright MCP artifacts (screenshots/logs)
+.playwright-mcp/

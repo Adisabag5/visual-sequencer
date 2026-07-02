@@ -1,0 +1,22 @@
+<section
+  class="relative h-[196px] overflow-hidden border-t"
+  style="border-color: var(--hairline); background: var(--viz-bg)"
+>
+  <canvas #canvas class="absolute inset-0 h-full w-full"></canvas>
+
+  <span
+    class="absolute left-[26px] top-4 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-mono"
+  >
+    Visualizer
+  </span>
+  <div class="absolute right-[26px] top-4 flex items-center gap-2">
+    <span
+      class="h-2 w-2 rounded-full"
+      [style.background]="isPlaying() ? 'var(--color-green)' : '#c9bee3'"
+      [style.box-shadow]="isPlaying() ? '0 0 8px rgba(47, 203, 151, 0.7)' : 'none'"
+    ></span>
+    <span class="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-mono">
+      {{ isPlaying() ? 'Live' : 'Idle' }}
+    </span>
+  </div>
+</section>

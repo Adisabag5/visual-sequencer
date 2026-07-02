@@ -1,0 +1,48 @@
+/* Pulse buttons — token-driven surfaces the utilities express poorly. */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+/* Play / Stop — the signature gradient orb. */
+.ui-btn-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  background: var(--play-gradient);
+  box-shadow: var(--shadow-play);
+  color: #fff;
+}
+
+/* Clear — white pill. */
+.ui-btn-pill {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* BPM +/- steppers. */
+.ui-btn-stepper {
+  width: 24px;
+  height: 20px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+}

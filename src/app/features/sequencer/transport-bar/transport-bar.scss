@@ -1,0 +1,16 @@
+/* Play/Stop glyphs — pure CSS geometry (white triangle / square). */
+.play-triangle {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 16px solid #fff;
+  margin-left: 4px;
+}
+
+.play-square {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #fff;
+}

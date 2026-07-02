@@ -1,13 +1,11 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SequencerPage } from './features/sequencer/sequencer-page/sequencer-page';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [SequencerPage],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {
-  protected readonly title = signal('angular-starter-template');
-}
+export class App {}

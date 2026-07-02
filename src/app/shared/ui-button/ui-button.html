@@ -1,0 +1,8 @@
+<button
+  type="button"
+  [class]="classes()"
+  [attr.aria-label]="ariaLabel() || null"
+  (click)="press.emit()"
+>
+  <ng-content />
+</button>
