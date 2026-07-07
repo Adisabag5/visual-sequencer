@@ -1,3 +1,5 @@
+<app-kit-panel />
+
 <main class="flex min-h-screen w-full justify-center px-8 pb-16 pt-12">
   <div class="flex w-full max-w-[980px] flex-col">
     <!-- Header -->
@@ -9,7 +11,7 @@
         <h1 class="text-[38px] font-bold leading-none tracking-[-0.02em] text-ink">Pulse</h1>
       </div>
       <p class="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-mono">
-        8 sounds · 16 steps
+        {{ kitLabel() }}
       </p>
     </header>
 
@@ -18,13 +20,14 @@
       <app-transport-bar
         (togglePlay)="onTogglePlay()"
         (bpmDelta)="onBpmDelta($event)"
-        (clearPattern)="onClear()"
+        (clearPattern)="pattern.clear()"
+        (kitToggle)="kitPanel.togglePanel()"
       />
       <app-grid
         (stepToggle)="onToggleStep($event)"
-        (muteToggle)="onToggleMute($event)"
-        (soloToggle)="onToggleSolo($event)"
-        (volumeChange)="onVolume($event)"
+        (muteToggle)="pattern.toggleMute($event)"
+        (soloToggle)="pattern.toggleSolo($event)"
+        (volumeChange)="pattern.setVolume($event.trackIndex, $event.value)"
         (pitchChange)="onPitch($event)"
       />
       <app-visualizer />
@@ -32,7 +35,8 @@
 
     <!-- Footer note -->
     <p class="mx-1 mt-[18px] font-mono text-[12.5px] leading-normal text-mono">
-      Hit Play to start the audio · click cells to program · clear · ±BPM · mute per row.
+      Open the Kit panel (left) to load a preset or build your own · hit Play · click steps to
+      program · your kit &amp; pattern are saved across refreshes.
     </p>
   </div>
 </main>

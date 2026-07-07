@@ -1,6 +1,6 @@
 <button
   type="button"
-  [class]="classes()"
+  class="ui-btn ui-btn-{{ variant() }}"
   [attr.aria-label]="ariaLabel() || null"
   (click)="press.emit()"
 >

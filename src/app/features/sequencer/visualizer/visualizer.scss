@@ -1,1 +1,15 @@
-/* Visualizer — Tailwind utilities in the template; Canvas 2D renderer comes later. */
+/* Visualizer — surface (the host) + the LIVE/IDLE status dot. Bars/particles draw on canvas. */
+
+:host {
+  border-color: var(--hairline);
+  background: var(--viz-bg);
+}
+
+.status-dot {
+  background: var(--color-dot-idle);
+}
+
+.status-dot.live {
+  background: var(--color-green);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-green) 70%, transparent);
+}

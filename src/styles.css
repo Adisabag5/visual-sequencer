@@ -23,8 +23,10 @@
   src: url('/fonts/space-mono-700.woff2') format('woff2');
 }
 
-/* ---------- Design tokens → Tailwind utilities (colors + fonts) ---------- */
-@theme {
+/* ---------- Design tokens → Tailwind utilities (colors + fonts) ----------
+   `static` so every token is emitted as a CSS variable even when no utility
+   references it — component SCSS consumes several of these via var(). */
+@theme static {
   --font-sans: 'Fredoka', ui-rounded, system-ui, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, monospace;
 
@@ -35,6 +37,24 @@
   --color-accent: #f2c84b;
   --color-amber: #e0a93b;
   --color-green: #2fcb97;
+  --color-chip-ink: #4a4266;
+  --color-slot-num: #c9bee3;
+  --color-dot-idle: #c9bee3;
+
+  /* Category colors (kit system v2). Must match CATEGORY_COLORS in
+     src/app/core/voice-library.ts (kept there as data for the Canvas visualizer). */
+  --color-cat-low: #9e86e8;
+  --color-cat-low-light: #c7b8f5;
+  --color-cat-tonal: #3fa9e8;
+  --color-cat-tonal-light: #9ad8f2;
+  --color-cat-snare: #7c66d6;
+  --color-cat-snare-light: #b3a0ee;
+  --color-cat-hat: #2fcb97;
+  --color-cat-hat-light: #9be8c8;
+  --color-cat-perc: #eba92e;
+  --color-cat-perc-light: #f6d885;
+  --color-cat-fx: #e86fa6;
+  --color-cat-fx-light: #f4aecb;
 }
 
 /* ---------- Design tokens (one-offs: gradients, shadows, hairlines) ---------- */
@@ -45,8 +65,20 @@
   --viz-bg: linear-gradient(180deg, #f4eeff, #ece2fb);
   --play-gradient: linear-gradient(120deg, #8fd3f4, #a98bee 52%, #5fe0b0);
 
+  /* Kit panel (design handoff v2, "Kit Panel") */
+  --panel-bg: rgba(251, 249, 255, 0.92);
+  --panel-scroll-thumb: rgba(158, 134, 232, 0.3);
+  --seg-bg: rgba(158, 134, 232, 0.12);
+  --seg-active-gradient: linear-gradient(120deg, #a98bee, #8fd3f4);
+  --kit-tab-gradient: linear-gradient(160deg, #a98bee, #8fd3f4);
+  --field-bg: #f7f4fe;
+  --card-active-bg: linear-gradient(180deg, #fbf7ff, #f3ecff);
+
   --hairline: rgba(158, 134, 232, 0.16);
+  --ring-slot: rgba(158, 134, 232, 0.18);
+  --ring-panel: rgba(158, 134, 232, 0.2);
   --ring-cell: rgba(158, 134, 232, 0.22);
+  --ring-field: rgba(158, 134, 232, 0.25);
   --ring-mute: rgba(158, 134, 232, 0.28);
 
   --shadow-card:
@@ -55,6 +87,12 @@
     inset 0 0 0 1.5px rgba(158, 134, 232, 0.22), 0 2px 5px rgba(130, 105, 205, 0.12);
   --shadow-play: 0 0 24px -3px rgba(140, 120, 235, 0.7);
   --shadow-btn: 0 1px 2px rgba(130, 105, 205, 0.1);
+  --shadow-panel: 24px 0 60px -30px rgba(120, 95, 200, 0.55);
+  --shadow-kit-tab: 6px 0 20px -8px rgba(140, 120, 235, 0.7);
+  --shadow-seg-active: 0 4px 12px -4px rgba(140, 120, 235, 0.6);
+  --shadow-card-active:
+    0 0 0 3px rgba(158, 134, 232, 0.15), 0 8px 20px -10px rgba(120, 95, 200, 0.5);
+  --shadow-card-idle: 0 1px 2px rgba(130, 105, 205, 0.08);
 }
 
 body {
@@ -62,4 +100,33 @@ body {
   background: var(--page-bg);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+/* ---------- Track color scope ----------
+   `.cat-<category>` sets the two track colors; component styles consume
+   var(--track-main) / var(--track-light). CSS variables inherit, so putting the
+   class on a row/orb/chip colors everything inside it. */
+.cat-low {
+  --track-main: var(--color-cat-low);
+  --track-light: var(--color-cat-low-light);
+}
+.cat-tonal {
+  --track-main: var(--color-cat-tonal);
+  --track-light: var(--color-cat-tonal-light);
+}
+.cat-snare {
+  --track-main: var(--color-cat-snare);
+  --track-light: var(--color-cat-snare-light);
+}
+.cat-hat {
+  --track-main: var(--color-cat-hat);
+  --track-light: var(--color-cat-hat-light);
+}
+.cat-perc {
+  --track-main: var(--color-cat-perc);
+  --track-light: var(--color-cat-perc-light);
+}
+.cat-fx {
+  --track-main: var(--color-cat-fx);
+  --track-light: var(--color-cat-fx-light);
 }

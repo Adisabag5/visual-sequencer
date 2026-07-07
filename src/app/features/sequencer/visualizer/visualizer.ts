@@ -21,8 +21,8 @@ interface Particle {
   life: number;
 }
 
-/** The 4 candy palette colors that cycle through the visualizer. */
-const PALETTE = ['#9e86e8', '#3fa9e8', '#2fcb97', '#f2c84b'];
+/** The 5 candy palette colors that cycle through the visualizer (v2 adds pink). */
+const PALETTE = ['#9e86e8', '#3fa9e8', '#2fcb97', '#f2c84b', '#e86fa6'];
 const BAR_COUNT = 44;
 const INSET_X = 26;
 const BAR_TOP = 34;
@@ -36,6 +36,9 @@ const BAR_GAP = 5;
   templateUrl: './visualizer.html',
   styleUrl: './visualizer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'relative block h-[196px] overflow-hidden border-t',
+  },
 })
 export class Visualizer implements AfterViewInit {
   private readonly engine = inject(AudioEngine);

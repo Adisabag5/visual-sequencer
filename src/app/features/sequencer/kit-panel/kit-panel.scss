@@ -1,0 +1,80 @@
+/* Kit panel + KIT edge tab — token-driven surfaces, glows, and the slide transform. */
+
+.kit-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid var(--ring-panel);
+  transform: translateX(-100%);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--panel-scroll-thumb);
+    border-radius: 99px;
+  }
+}
+
+.kit-panel-open {
+  transform: translateX(0);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Vertical KIT tab on the left edge (only shown while the panel is closed). */
+.kit-tab {
+  border: 0;
+  border-radius: 0 14px 14px 0;
+  background: var(--kit-tab-gradient);
+  box-shadow: var(--shadow-kit-tab);
+  transition: opacity 0.25s;
+}
+
+.kit-tab-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kit-tab-bar {
+  width: 14px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #fff;
+}
+
+.kit-tab-label {
+  writing-mode: vertical-rl;
+}
+
+/* Presets | Custom segmented control. */
+.seg-btn {
+  flex: 1;
+  cursor: pointer;
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 0;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--color-btn);
+  background: transparent;
+  transition: all 0.15s;
+}
+
+.seg-btn-active {
+  color: #fff;
+  background: var(--seg-active-gradient);
+  box-shadow: var(--shadow-seg-active);
+}
+
+/* ✕ close button ring. */
+.panel-close {
+  border: 1px solid var(--ring-field);
+}
+
+/* Segmented-control track. */
+.seg-wrap {
+  background: var(--seg-bg);
+}

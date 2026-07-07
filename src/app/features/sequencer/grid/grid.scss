@@ -1,1 +1,13 @@
-/* Grid — Tailwind utilities in the template. */
+/* Grid — ruler slot colors (amber under the playhead beats the muted beat violet). */
+
+.ruler-slot {
+  color: transparent;
+}
+
+.ruler-slot.ruler-beat {
+  color: var(--color-mono);
+}
+
+.ruler-slot.ruler-playhead {
+  color: var(--color-amber);
+}

@@ -1,1 +1,42 @@
-/* StepOrb — Tailwind utilities in the template; real orb gradient/glow comes later. */
+/* StepOrb — the four step-cell states (design handoff, "Step cell").
+   Track colors come from the enclosing `.cat-*` scope (--track-main / --track-light),
+   set on the owning track row. */
+
+.orb {
+  background: #fff;
+  box-shadow: var(--shadow-cell-off);
+}
+
+/* Off cell under the playhead while playing: yellow ring. */
+.orb.playhead {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow:
+    inset 0 0 0 1.5px var(--color-accent),
+    0 0 12px color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+/* On cell: candy radial gradient + glow. */
+.orb.on {
+  background: radial-gradient(circle at 50% 36%, var(--track-light), var(--track-main));
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--track-main) 60%, transparent),
+    inset 0 1px 1px rgb(255 255 255 / 55%);
+}
+
+/* On cell being played: white-hot core + the satisfying pop. */
+.orb.hit {
+  background: radial-gradient(circle at 50% 36%, #fff, var(--color-accent) 34%, var(--track-main));
+  box-shadow:
+    0 0 22px 5px color-mix(in srgb, var(--track-main) 80%, transparent),
+    0 0 46px color-mix(in srgb, var(--color-accent) 53%, transparent);
+  transform: scale(1.22);
+}
+
+/* At-rest pitch indicator, rotated by --notch-deg (set via host binding). */
+.orb-notch {
+  transform: rotate(var(--notch-deg, 0deg));
+}
+
+.orb-notch-tick {
+  background: var(--color-accent);
+}

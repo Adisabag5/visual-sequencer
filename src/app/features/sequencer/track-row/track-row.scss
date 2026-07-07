@@ -1,1 +1,34 @@
-/* TrackRow — Tailwind utilities in the template. */
+/* TrackRow — mute/solo toggles + volume bar (design handoff, "Row label").
+   --track-main/--track-light come from the host's `.cat-*` scope; --vol is the
+   track volume (0…1), set via host binding. */
+
+.mute-btn {
+  background: var(--color-green);
+  box-shadow: 0 0 11px color-mix(in srgb, var(--color-green) 55%, transparent);
+}
+
+.mute-btn.is-muted {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--ring-mute);
+}
+
+.solo-btn {
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--ring-mute);
+  color: var(--color-mono);
+}
+
+.solo-btn.is-soloed {
+  background: var(--color-accent);
+  box-shadow: 0 0 11px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  color: var(--color-ink);
+}
+
+.vol-track {
+  background: var(--hairline);
+}
+
+.vol-fill {
+  width: calc(var(--vol, 0) * 100%);
+  background: linear-gradient(90deg, var(--track-light), var(--track-main));
+}

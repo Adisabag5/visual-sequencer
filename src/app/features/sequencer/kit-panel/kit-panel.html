@@ -1,0 +1,82 @@
+<!-- KIT edge tab — visible only while the panel is closed -->
+<button
+  type="button"
+  class="kit-tab fixed left-0 top-1/2 z-[45] flex -translate-y-1/2 cursor-pointer flex-col items-center gap-2 px-[9px] py-4"
+  [class.kit-tab-hidden]="panel.panelOpen()"
+  aria-label="Open kit panel"
+  (click)="panel.openPanel()"
+>
+  <span class="flex flex-col gap-[3px]">
+    <span class="kit-tab-bar"></span>
+    <span class="kit-tab-bar"></span>
+    <span class="kit-tab-bar"></span>
+  </span>
+  <span class="kit-tab-label font-mono text-[10px] font-bold tracking-[0.15em] text-white">
+    KIT
+  </span>
+</button>
+
+<!-- Slide-out panel -->
+<aside
+  class="kit-panel fixed inset-y-0 left-0 z-50 w-[330px] overflow-y-auto px-[22px] py-[26px]"
+  [class.kit-panel-open]="panel.panelOpen()"
+>
+  <!-- Header: eyebrow + title + close -->
+  <div class="mb-[18px] flex items-center justify-between">
+    <div>
+      <p class="font-mono text-[11px] font-bold tracking-[0.2em] text-eyebrow">KIT</p>
+      <h2 class="mt-[2px] text-[22px] font-semibold tracking-[-0.01em] text-ink">Sound library</h2>
+    </div>
+    <button
+      type="button"
+      class="panel-close h-8 w-8 shrink-0 cursor-pointer rounded-full bg-white text-base leading-none text-btn"
+      aria-label="Close kit panel"
+      (click)="panel.closePanel()"
+    >
+      ✕
+    </button>
+  </div>
+
+  <!-- Segmented control: Presets | Custom -->
+  <div class="seg-wrap mb-[18px] flex gap-[6px] rounded-xl p-1">
+    <button
+      type="button"
+      class="seg-btn"
+      [class.seg-btn-active]="panel.kitMode() === 'presets'"
+      (click)="setMode('presets')"
+    >
+      Presets
+    </button>
+    <button
+      type="button"
+      class="seg-btn"
+      [class.seg-btn-active]="panel.kitMode() === 'custom'"
+      (click)="setMode('custom')"
+    >
+      Custom
+    </button>
+  </div>
+
+  @if (panel.kitMode() === 'presets') {
+    <!-- Presets view: the 3 kit cards -->
+    <div class="flex flex-col gap-3">
+      @for (kit of kits; track kit.id) {
+        <app-kit-card [kit]="kit" [active]="activeKit() === kit.id" (loadKit)="loadKit(kit.id)" />
+      }
+    </div>
+  } @else {
+    <!-- Custom view: hint + 8 voice pickers -->
+    <p class="mx-[2px] mb-3 font-mono text-[11px] leading-normal text-mono">
+      Assign any voice to each of the 8 tracks. Your grid pattern stays — only the sound changes.
+    </p>
+    <div class="flex flex-col gap-2">
+      @for (track of tracks(); track $index) {
+        <app-voice-picker
+          [track]="track"
+          [trackNumber]="$index + 1"
+          (voiceChange)="onVoiceChange($index, $event)"
+        />
+      }
+    </div>
+  }
+</aside>

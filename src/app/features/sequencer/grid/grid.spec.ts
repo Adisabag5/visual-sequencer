@@ -7,7 +7,7 @@ describe('Grid', () => {
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Kick');
-    expect(el.textContent).toContain('Crash');
+    expect(el.textContent).toContain('Synth Stab');
     expect(el.querySelectorAll('app-track-row').length).toBe(8);
   });
 });

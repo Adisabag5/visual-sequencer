@@ -47,6 +47,11 @@ Full spec in `claude-docs/01-overview.md`.
 - Pull colors, radii, blur, and glow from **design tokens** (CSS variables in
   `src/styles/`). Do not hardcode hex values in components.
 - Component SCSS only for things utilities do poorly (orb gradients/glows).
+- **No inline styles — ever** (decided 2026-07-07). Templates must not contain
+  `style="…"` attributes or `[style.*]`/`[ngStyle]` bindings. All CSS rules live in
+  stylesheet files (component SCSS or `src/styles/`). Dynamic values cross into CSS
+  only as CSS custom properties or classes set from the component class (host
+  bindings / `[class.x]`); the rules that consume them live in the stylesheet.
 - Match the Pulse design: pastel, glassmorphism, glowing gradient orbs, rounded font.
 
 ## Audio & visualizer

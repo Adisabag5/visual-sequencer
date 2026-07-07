@@ -1,7 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import * as Tone from 'tone';
 import { DEFAULT_BPM, STEP_COUNT } from '../core/constants';
-import { Track, Voice } from '../core/models';
+import { Track, VoiceId } from '../core/models';
+import { isTrackAudible } from '../core/util';
 import { createVoices, VoiceKit } from './voices';
 
 /** Emitted when a step fires: which step, its energy, and the colors that hit. */
@@ -13,7 +14,7 @@ export interface StepTrigger {
 
 /** Plain, non-reactive snapshot of a track for the audio scheduler. */
 interface MirrorTrack {
-  voice: Voice;
+  voice: VoiceId;
   muted: boolean;
   soloed: boolean;
   vol: number;
@@ -73,7 +74,7 @@ export class AudioEngine {
   }
 
   /** Play a single voice immediately (click-audition). */
-  audition(voice: Voice, pitch = 0, vol = 1): void {
+  audition(voice: VoiceId, pitch = 0, vol = 1): void {
     this.voices?.trigger(voice, undefined, pitch, vol);
   }
 
@@ -100,14 +101,13 @@ export class AudioEngine {
       const colors: string[] = [];
       for (const track of this.mirror) {
         const step = track.steps[i];
-        const audible = anySoloed ? track.soloed : !track.muted;
-        if (step?.on && audible) {
+        if (step?.on && isTrackAudible(track, anySoloed)) {
           this.voices?.trigger(track.voice, time, step.pitch, track.vol);
           sum += track.vol;
           colors.push(track.main);
         }
       }
-      const energy = Math.min(1, sum / 2.1);
+      const energy = Math.min(1, sum / 2.4);
       // Update playhead + visualizer exactly when this tick sounds.
       Tone.getDraw().schedule(() => {
         this._currentStep.set(i);

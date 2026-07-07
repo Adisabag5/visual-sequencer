@@ -1,0 +1,15 @@
+/* One Custom-view slot row (the host) + its category swatch and picker field. */
+
+:host {
+  border: 1px solid var(--ring-slot);
+}
+
+.slot-swatch {
+  background: radial-gradient(circle at 50% 35%, var(--track-light), var(--track-main));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--track-main) 53%, transparent);
+}
+
+.picker-field {
+  background: var(--field-bg);
+  border: 1px solid var(--ring-field);
+}

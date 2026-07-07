@@ -1,0 +1,28 @@
+<button type="button" class="kit-card" [class.kit-card-active]="active()" (click)="loadKit.emit()">
+  <span class="mb-[6px] flex items-center justify-between">
+    <span class="text-[15px] font-semibold text-ink">{{ kit().name }}</span>
+    @if (active()) {
+      <span
+        class="rounded-full bg-eyebrow px-2 py-[3px] font-mono text-[9px] font-bold tracking-[0.12em] text-white"
+      >
+        LOADED
+      </span>
+    } @else {
+      <span class="font-mono text-[9px] font-bold tracking-[0.1em] text-eyebrow">LOAD →</span>
+    }
+  </span>
+  <span class="mb-[10px] block font-mono text-[11.5px] leading-[1.4] text-mono">
+    {{ kit().desc }}
+  </span>
+  <span class="flex flex-wrap gap-[5px]">
+    @for (chip of chips(); track $index) {
+      <span
+        class="chip whitespace-nowrap rounded-full px-2 py-[2px] text-[10px] font-medium text-chip-ink cat-{{
+          chip.category
+        }}"
+      >
+        {{ chip.name }}
+      </span>
+    }
+  </span>
+</button>

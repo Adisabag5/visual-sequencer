@@ -1,84 +1,64 @@
-<div class="grid grid-cols-[150px_1fr] items-center gap-[18px]">
-  <!-- Track label: mute + solo toggles, name, volume bar -->
-  <div class="flex items-center gap-[10px]">
-    <div class="flex shrink-0 items-center gap-[6px]">
-      <button
-        type="button"
-        class="h-[22px] w-[22px] cursor-pointer rounded-[7px] p-0 transition-all"
-        [style.background]="track().muted ? '#fff' : 'var(--color-green)'"
-        [style.box-shadow]="
-          track().muted ? 'inset 0 0 0 1.5px var(--ring-mute)' : '0 0 11px rgba(47, 203, 151, 0.55)'
-        "
-        [attr.aria-pressed]="track().muted"
-        aria-label="Mute track"
-        (click)="muteToggle.emit()"
-      ></button>
-      <button
-        type="button"
-        class="flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-[7px] p-0 text-[11px] font-semibold transition-all"
-        [style.background]="track().soloed ? 'var(--color-accent)' : '#fff'"
-        [style.box-shadow]="
-          track().soloed
-            ? '0 0 11px rgba(242, 200, 75, 0.55)'
-            : 'inset 0 0 0 1.5px var(--ring-mute)'
-        "
-        [style.color]="track().soloed ? '#2c2545' : '#a99ac9'"
-        [attr.aria-pressed]="track().soloed"
-        aria-label="Solo track"
-        (click)="soloToggle.emit()"
-      >
-        S
-      </button>
-    </div>
+<!-- Track label: mute + solo toggles, name, volume bar -->
+<div class="flex items-center gap-[10px]">
+  <div class="flex shrink-0 items-center gap-[6px]">
+    <button
+      type="button"
+      class="mute-btn h-[22px] w-[22px] cursor-pointer rounded-[7px] p-0 transition-all"
+      [class.is-muted]="track().muted"
+      [attr.aria-pressed]="track().muted"
+      aria-label="Mute track"
+      (click)="muteToggle.emit()"
+    ></button>
+    <button
+      type="button"
+      class="solo-btn flex h-[22px] w-[22px] cursor-pointer items-center justify-center rounded-[7px] p-0 text-[11px] font-semibold transition-all"
+      [class.is-soloed]="track().soloed"
+      [attr.aria-pressed]="track().soloed"
+      aria-label="Solo track"
+      (click)="soloToggle.emit()"
+    >
+      S
+    </button>
+  </div>
 
-    <div [class.opacity-45]="notAudible()">
-      <p class="whitespace-nowrap text-[15px] font-semibold tracking-[-0.01em] text-ink">
-        {{ track().name }}
-      </p>
-      <div class="relative mt-[6px] h-[5px] w-16">
-        <div
-          class="h-full w-full overflow-hidden rounded-full"
-          style="background: rgba(158, 134, 232, 0.16)"
-        >
-          <div
-            class="h-full rounded-full"
-            [style.width.%]="track().vol * 100"
-            [style.background]="
-              'linear-gradient(90deg, ' + track().light + ', ' + track().main + ')'
-            "
-          ></div>
-        </div>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          [value]="track().vol"
-          (input)="volumeChange.emit($any($event.target).valueAsNumber)"
-          class="absolute inset-x-0 -inset-y-2 w-full cursor-pointer opacity-0"
-          aria-label="Volume"
+  <div class="min-w-0" [class.opacity-45]="notAudible()">
+    <p
+      class="overflow-hidden text-ellipsis whitespace-nowrap text-[14.5px] font-semibold tracking-[-0.01em] text-ink"
+    >
+      {{ track().name }}
+    </p>
+    <div class="relative mt-[6px] h-[5px] w-16">
+      <div class="vol-track h-full w-full overflow-hidden rounded-full">
+        <div class="vol-fill h-full rounded-full"></div>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        [value]="track().vol"
+        (input)="volumeChange.emit($any($event.target).valueAsNumber)"
+        class="absolute inset-x-0 -inset-y-2 w-full cursor-pointer opacity-0"
+        aria-label="Volume"
+      />
+    </div>
+  </div>
+</div>
+
+<!-- 16 steps as 4 beat-groups of 4 (equal orbs + group spacing) -->
+<div class="flex gap-3">
+  @for (g of beats; track g) {
+    <div class="grid flex-1 grid-cols-4 gap-[9px]">
+      @for (i of beats; track i) {
+        @let idx = g * stepsPerBeat + i;
+        <app-step-orb
+          [step]="track().steps[idx]"
+          [muted]="notAudible()"
+          [current]="playing() && idx === currentStep()"
+          (stepToggle)="stepToggle.emit(idx)"
+          (pitchChange)="pitchChange.emit({ stepIndex: idx, pitch: $event })"
         />
-      </div>
+      }
     </div>
-  </div>
-
-  <!-- 16 steps as 4 beat-groups of 4 (equal orbs + group spacing) -->
-  <div class="flex gap-3">
-    @for (g of groups; track g) {
-      <div class="grid flex-1 grid-cols-4 gap-[9px]">
-        @for (i of quarter; track i) {
-          @let idx = g * 4 + i;
-          <app-step-orb
-            [step]="track().steps[idx]"
-            [muted]="notAudible()"
-            [main]="track().main"
-            [light]="track().light"
-            [current]="playing() && idx === currentStep()"
-            (stepToggle)="stepToggle.emit(idx)"
-            (pitchChange)="pitchChange.emit({ stepIndex: idx, pitch: $event })"
-          />
-        }
-      </div>
-    }
-  </div>
+  }
 </div>

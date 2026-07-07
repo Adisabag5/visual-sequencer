@@ -1,17 +1,25 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { PITCH_RANGE } from '../../../core/constants';
 import { Step } from '../../../core/models';
+import { clampPitch } from '../../../core/util';
 
 const PIXELS_PER_SEMITONE = 8;
 const DRAG_THRESHOLD = 3;
-const MAX_PITCH = 12;
 
-/** A single step orb. Renders the four states; an on-step doubles as a pitch knob. */
+/**
+ * A single step orb. Renders the four states; an on-step doubles as a pitch knob.
+ * Colors are consumed from the enclosing `.cat-*` scope (--track-main/--track-light);
+ * the notch angle crosses into CSS as the --notch-deg custom property.
+ */
 @Component({
   selector: 'app-step-orb',
   imports: [],
   templateUrl: './step-orb.html',
   styleUrl: './step-orb.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[style.--notch-deg]': 'notchDeg()',
+  },
 })
 export class StepOrb {
   readonly step = input.required<Step>();
@@ -19,9 +27,6 @@ export class StepOrb {
   readonly current = input(false);
   /** True when the owning track is muted (dims an on-step). */
   readonly muted = input(false);
-  /** The track's two colors. */
-  readonly main = input('#9e86e8');
-  readonly light = input('#c7b8f5');
   readonly stepToggle = output<void>();
   /** New absolute pitch (−12…+12) while turning the knob. */
   readonly pitchChange = output<number>();
@@ -32,46 +37,17 @@ export class StepOrb {
   private pointerId?: number;
   private moved = false;
 
-  private readonly isHit = computed(() => this.step().on && this.current() && !this.muted());
-  private readonly isPlayhead = computed(() => !this.step().on && this.current());
+  protected readonly isHit = computed(() => this.step().on && this.current() && !this.muted());
+  protected readonly isPlayhead = computed(() => !this.step().on && this.current());
 
   /** At-rest pitch indicator (only for tweaked on-steps). */
   protected readonly showNotch = computed(() => this.step().on && this.step().pitch !== 0);
-  protected readonly notchAngle = computed(() => (this.step().pitch / MAX_PITCH) * 135);
+  /** ±PITCH_RANGE mapped to −135°…+135°, as a CSS length for the --notch-deg property. */
+  protected readonly notchDeg = computed(() => `${(this.step().pitch / PITCH_RANGE) * 135}deg`);
   protected readonly pitchLabel = computed(() => {
     const p = this.step().pitch;
     return p > 0 ? `+${p}` : String(p);
   });
-
-  /** Background / shadow / transform per the four states (design handoff). */
-  protected readonly orb = computed<{ background: string; shadow: string; transform: string }>(
-    () => {
-      const main = this.main();
-      const light = this.light();
-      if (this.isHit()) {
-        return {
-          background: `radial-gradient(circle at 50% 36%, #fff, #F2C84B 34%, ${main})`,
-          shadow: `0 0 22px 5px ${main}cc, 0 0 46px #F2C84B88`,
-          transform: 'scale(1.22)',
-        };
-      }
-      if (this.step().on) {
-        return {
-          background: `radial-gradient(circle at 50% 36%, ${light}, ${main})`,
-          shadow: `0 0 16px ${main}99, inset 0 1px 1px rgba(255, 255, 255, 0.55)`,
-          transform: 'none',
-        };
-      }
-      if (this.isPlayhead()) {
-        return {
-          background: 'rgba(242, 200, 75, 0.22)',
-          shadow: 'inset 0 0 0 1.5px #F2C84B, 0 0 12px rgba(242, 200, 75, 0.5)',
-          transform: 'none',
-        };
-      }
-      return { background: '#ffffff', shadow: 'var(--shadow-cell-off)', transform: 'none' };
-    },
-  );
 
   onClick(): void {
     // A drag consumes the click so it doesn't also toggle the step.
@@ -128,8 +104,4 @@ export class StepOrb {
     e.preventDefault();
     if (this.step().on && this.step().pitch !== 0) this.pitchChange.emit(0);
   }
-}
-
-function clampPitch(n: number): number {
-  return Math.min(MAX_PITCH, Math.max(-MAX_PITCH, n));
 }

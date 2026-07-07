@@ -8,6 +8,16 @@
   font-family: var(--font-sans);
 }
 
+/* Shared white surface (pill + stepper). */
+.ui-btn-pill,
+.ui-btn-stepper {
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-weight: 600;
+}
+
 /* Play / Stop — the signature gradient orb. */
 .ui-btn-circle {
   width: 52px;
@@ -23,11 +33,6 @@
   height: 42px;
   padding: 0 20px;
   border-radius: 9999px;
-  background: #fff;
-  border: 1px solid var(--ring-cell);
-  box-shadow: var(--shadow-btn);
-  color: var(--color-btn);
-  font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -38,11 +43,6 @@
   width: 24px;
   height: 20px;
   border-radius: 6px;
-  background: #fff;
-  border: 1px solid var(--ring-cell);
-  box-shadow: var(--shadow-btn);
-  color: var(--color-btn);
-  font-weight: 600;
   font-size: 14px;
   line-height: 1;
 }

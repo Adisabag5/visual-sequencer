@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { DEFAULT_BPM, MAX_BPM, MIN_BPM } from '../core/constants';
+import { clamp } from '../core/util';
 import { StorageService } from './storage.service';
 
 /**
@@ -18,9 +19,7 @@ export class TransportStore {
 
   constructor() {
     const saved = inject(StorageService).restore();
-    if (saved && Number.isFinite(saved.bpm)) {
-      this._bpm.set(Math.min(MAX_BPM, Math.max(MIN_BPM, saved.bpm)));
-    }
+    if (saved && Number.isFinite(saved.bpm)) this.setBpm(saved.bpm);
   }
 
   play(): void {
@@ -34,7 +33,7 @@ export class TransportStore {
 
   /** Set tempo, clamped to the allowed range. */
   setBpm(bpm: number): void {
-    this._bpm.set(Math.min(MAX_BPM, Math.max(MIN_BPM, bpm)));
+    this._bpm.set(clamp(bpm, MIN_BPM, MAX_BPM));
   }
 
   /** Mirror the playhead position reported by the audio engine. */

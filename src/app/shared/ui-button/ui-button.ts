@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 export type UiButtonVariant = 'circle' | 'pill' | 'stepper';
 
@@ -14,6 +14,4 @@ export class UiButton {
   readonly variant = input<UiButtonVariant>('pill');
   readonly ariaLabel = input<string>('');
   readonly press = output<void>();
-
-  protected readonly classes = computed(() => `ui-btn ui-btn-${this.variant()}`);
 }

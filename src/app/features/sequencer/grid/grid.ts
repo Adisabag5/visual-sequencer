@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
-import { STEP_COUNT } from '../../../core/constants';
+import { BEAT_INDICES, STEP_COUNT, STEPS_PER_BEAT } from '../../../core/constants';
 import { PatternStore } from '../../../state/pattern.store';
 import { TransportStore } from '../../../state/transport.store';
 import { TrackRow } from '../track-row/track-row';
@@ -11,6 +11,9 @@ import { TrackRow } from '../track-row/track-row';
   templateUrl: './grid.html',
   styleUrl: './grid.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block px-[30px] py-[26px]',
+  },
 })
 export class Grid {
   private readonly pattern = inject(PatternStore);
@@ -34,16 +37,20 @@ export class Grid {
 
   /** Beat numbers on every 4th slot, a dot on the rest. */
   protected readonly ruler = Array.from({ length: STEP_COUNT }, (_, i) =>
-    i % 4 === 0 ? String(i / 4 + 1) : '·',
+    this.isBeat(i) ? String(i / STEPS_PER_BEAT + 1) : '·',
   );
 
   /** Same 4-groups-of-4 layout as the track rows, so the ruler stays aligned. */
-  protected readonly groups = [0, 1, 2, 3];
-  protected readonly quarter = [0, 1, 2, 3];
+  protected readonly beats = BEAT_INDICES;
+  protected readonly stepsPerBeat = STEPS_PER_BEAT;
 
-  /** Ruler color: amber under the playhead, muted violet on beats, else transparent. */
-  protected rulerColor(i: number): string {
-    if (this.isPlaying() && i === this.currentStep()) return '#e0a93b';
-    return i % 4 === 0 ? '#a99ac9' : 'transparent';
+  /** Ruler slot showing a beat number (every 4th step). */
+  protected isBeat(i: number): boolean {
+    return i % STEPS_PER_BEAT === 0;
+  }
+
+  /** Ruler slot under the playhead while playing (lights amber). */
+  protected isPlayheadCol(i: number): boolean {
+    return this.isPlaying() && i === this.currentStep();
   }
 }

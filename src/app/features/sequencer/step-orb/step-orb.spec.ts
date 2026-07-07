@@ -9,41 +9,51 @@ describe('StepOrb', () => {
     return fixture;
   }
 
-  it('renders an on step as a colored gradient', async () => {
-    const fixture = render({ on: true, pitch: 0 }, { main: '#9E86E8', light: '#C7B8F5' });
+  function orbEl(fixture: ReturnType<typeof render>): HTMLButtonElement {
+    return (fixture.nativeElement as HTMLElement).querySelector('button')!;
+  }
+
+  it('renders an on step with the on state class', async () => {
+    const fixture = render({ on: true, pitch: 0 });
     await fixture.whenStable();
-    const orb = (fixture.nativeElement as HTMLElement).querySelector('button')!;
-    expect(orb.style.background).toContain('radial-gradient');
+    const orb = orbEl(fixture);
+    expect(orb.classList.contains('on')).toBe(true);
+    expect(orb.classList.contains('hit')).toBe(false);
   });
 
-  it('renders an off step with the cell-off shadow', async () => {
+  it('renders an off step with no state classes', async () => {
     const fixture = render({ on: false, pitch: 0 });
     await fixture.whenStable();
-    const orb = (fixture.nativeElement as HTMLElement).querySelector('button')!;
-    expect(orb.style.boxShadow).toContain('--shadow-cell-off');
-    expect(orb.style.transform).toBe('none');
+    const orb = orbEl(fixture);
+    expect(orb.classList.contains('on')).toBe(false);
+    expect(orb.classList.contains('hit')).toBe(false);
+    expect(orb.classList.contains('playhead')).toBe(false);
   });
 
-  it('pops (scales) on a hit', async () => {
+  it('marks the hit state when current while on', async () => {
     const fixture = render({ on: true, pitch: 0 }, { current: true });
     await fixture.whenStable();
-    const orb = (fixture.nativeElement as HTMLElement).querySelector('button')!;
-    expect(orb.style.transform).toContain('scale(1.22)');
+    expect(orbEl(fixture).classList.contains('hit')).toBe(true);
   });
 
-  it('shows a rotated pitch notch for a tweaked on-step', async () => {
+  it('marks the playhead state when current while off', async () => {
+    const fixture = render({ on: false, pitch: 0 }, { current: true });
+    await fixture.whenStable();
+    expect(orbEl(fixture).classList.contains('playhead')).toBe(true);
+  });
+
+  it('shows the pitch notch, rotated via --notch-deg, for a tweaked on-step', async () => {
     const fixture = render({ on: true, pitch: 6 });
     await fixture.whenStable();
-    const notch = (fixture.nativeElement as HTMLElement).querySelector('span[style*="rotate"]');
-    expect(notch).not.toBeNull();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('.orb-notch')).not.toBeNull();
+    expect(host.style.getPropertyValue('--notch-deg')).toBe('67.5deg');
   });
 
   it('shows no notch at pitch 0', async () => {
     const fixture = render({ on: true, pitch: 0 });
     await fixture.whenStable();
-    expect(
-      (fixture.nativeElement as HTMLElement).querySelector('span[style*="rotate"]'),
-    ).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.orb-notch')).toBeNull();
   });
 
   it('scroll up raises the pitch', async () => {
@@ -51,7 +61,7 @@ describe('StepOrb', () => {
     let emitted: number | undefined;
     fixture.componentInstance.pitchChange.subscribe((v) => (emitted = v));
     await fixture.whenStable();
-    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    const btn = orbEl(fixture);
     btn.dispatchEvent(new WheelEvent('wheel', { deltaY: -1, bubbles: true, cancelable: true }));
     expect(emitted).toBe(1);
   });
@@ -61,7 +71,7 @@ describe('StepOrb', () => {
     let emitted: number | undefined;
     fixture.componentInstance.pitchChange.subscribe((v) => (emitted = v));
     await fixture.whenStable();
-    const btn = (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    const btn = orbEl(fixture);
     btn.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
     expect(emitted).toBe(0);
   });

@@ -1,3 +1,9 @@
+/* Transport bar surface (the host is the bar). */
+:host {
+  border-color: var(--hairline);
+  background: var(--transport-bg);
+}
+
 /* Play/Stop glyphs — pure CSS geometry (white triangle / square). */
 .play-triangle {
   width: 0;
@@ -13,4 +19,31 @@
   height: 14px;
   border-radius: 3px;
   background: #fff;
+}
+
+/* Kit — white pill with a hamburger icon; toggles the kit panel. */
+.kit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  cursor: pointer;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kit-btn-bar {
+  width: 13px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-eyebrow);
 }

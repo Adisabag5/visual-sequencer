@@ -1,0 +1,26 @@
+/* Preset kit card + its category-colored voice chips. */
+
+.kit-card {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  padding: 14px 15px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1.5px solid var(--ring-panel);
+  box-shadow: var(--shadow-card-idle);
+  transition: all 0.15s;
+}
+
+.kit-card-active {
+  background: var(--card-active-bg);
+  border-color: var(--color-eyebrow);
+  box-shadow: var(--shadow-card-active);
+}
+
+/* Chip colors come from the `.cat-*` scope. */
+.chip {
+  background: color-mix(in srgb, var(--track-light) 33%, transparent);
+  border: 1px solid color-mix(in srgb, var(--track-main) 33%, transparent);
+}
