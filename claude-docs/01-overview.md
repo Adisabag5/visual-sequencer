@@ -6,9 +6,12 @@
 
 ## What Pulse is
 
-Pulse is a **browser-based audiovisual step-sequencer drum machine**. It runs
-entirely on the client (no backend in v1) as an Angular web app, and is designed
-so it can later be wrapped for mobile (PWA → Capacitor; notes inline in tech-stack/architecture).
+Pulse is a **browser-based audiovisual step-sequencer drum machine**, an Angular web app
+designed so it can later be wrapped for mobile (PWA → Capacitor; notes inline in
+tech-stack/architecture). The instrument itself runs entirely on the client; since
+2026-08-22 a backend (`~/DEV/nest-server`) adds accounts, so a person can save named
+**beats** and reach them from any device. Playing and editing still work without an
+account.
 
 The user programs rhythmic patterns on a grid: each **element** (instrument) is a
 horizontal row of **16 steps**, rendered as glowing gradient orbs. Toggling a step
@@ -90,9 +93,14 @@ Deliberately **not** in v1 (deferred):
 - Additional per-step parameters (filter, decay, pan, probability) — the knob is
   built to be extensible, but v1 ships pitch only.
 - Swing / shuffle (rigid 16th-note timing for now)
-- Multiple saved patterns
 - Song mode (chaining patterns)
 - User-uploaded samples
+
+Moved **into** scope on 2026-08-22 (see the glossary's "Accounts & library"):
+
+- Accounts — sign up / sign in, with a profile per account.
+- Multiple saved patterns — a **beat** is a titled pattern owned by an account, and
+  beats group into **collections**. The live in-memory pattern is still single.
 
 ## Pattern scope (v1)
 

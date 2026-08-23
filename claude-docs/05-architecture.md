@@ -1,7 +1,7 @@
 # Pulse — Architecture & Folder Structure
 
 > Document 5 of 7. Where everything lives and how the layers relate.
-> Status: **Decided.** Last updated 2026-06-30.
+> Status: **Decided.** Last updated 2026-08-22 (added the API layer for accounts).
 
 ## Layering (the one rule that matters most)
 
@@ -11,17 +11,26 @@ the one below it, never the reverse, and never skip the engine to touch Tone.js.
 ```
 ┌───────────────────────────────────────────────┐
 │  UI layer        components (grid, transport,  │  Angular standalone components
-│                  track, step, visualizer)      │  thin: render + emit, no logic
+│                  track, step, visualizer, auth)│  thin: render + emit, no logic
 ├───────────────────────────────────────────────┤
 │  State layer     PatternStore, TransportStore, │  signals; single source of truth
-│                  SelectionStore                 │  owns pattern data + persistence
-├───────────────────────────────────────────────┤
-│  Audio layer     AudioEngine (the ONLY file    │  wraps Tone.js; sounds the pattern
-│                  that imports Tone.js)          │
-├───────────────────────────────────────────────┤
-│  Core / domain   types, constants, kit defs    │  framework-free, pure TS
+│                  SelectionStore, AuthStore     │  owns pattern data + persistence
+├───────────────────────┬───────────────────────┤
+│  Audio layer          │  API layer            │  two adapters to the outside world
+│  AudioEngine — the    │  ApiClient — the ONLY │  neither knows about the other
+│  ONLY file that       │  place HttpClient is  │
+│  imports Tone.js      │  imported             │
+├───────────────────────┴───────────────────────┤
+│  Core / domain   types, constants, kit defs   │  framework-free, pure TS
 └───────────────────────────────────────────────┘
 ```
+
+**The API layer (added 2026-08-22)** sits beside Audio, not above or below it: both are
+adapters to something outside the app, and neither may import the other. The same
+quarantine reasoning applies — Tone.js lives in exactly one folder so swapping audio libs
+is a one-file rewrite; `HttpClient` lives in exactly one folder so changing transport
+(or mocking the whole server in tests) is too. Components and stores never call
+`HttpClient` directly.
 
 Why this is the highest-leverage decision for fast, safe agent work:
 

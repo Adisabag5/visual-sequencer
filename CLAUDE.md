@@ -6,26 +6,35 @@
 
 ## What Pulse is (one paragraph)
 
-A client-only Angular web app: an 8-track × 16-step audiovisual drum-machine
-sequencer. Built-in samples, tempo/transport, per-track volume/mute/solo, per-step
-pitch (select-then-tweak knob), and a headline reactive visualizer. No backend;
-auto-saves to the browser. Designed to wrap to mobile later (PWA → Capacitor).
-Full spec in `claude-docs/01-overview.md`.
+An Angular web app: an 8-track × 16-step audiovisual drum-machine sequencer.
+Built-in samples, tempo/transport, per-track volume/mute/solo, per-step pitch
+(select-then-tweak knob), and a headline reactive visualizer. The sequencer itself
+still works offline and auto-saves to the browser. Designed to wrap to mobile later
+(PWA → Capacitor). Full spec in `claude-docs/01-overview.md`.
+
+**Accounts (added 2026-08-22).** Pulse now has a backend: `~/DEV/nest-server`, a NestJS +
+MySQL API providing sign up / sign in, profiles, collections and saved **beats**. This
+replaced the original "client-only, no backend" scope. The pattern still auto-saves
+locally; the server is what lets a person keep named beats across devices.
 
 ## Golden rules (do not break these)
 
 1. **Respect the layers.** Dependencies flow downward only:
-   `UI → State → Audio → Core`. UI never reaches past State to the engine's
-   internals; nothing lower imports anything higher. (See `claude-docs/05-architecture.md`.)
+   `UI → State → {Audio | API} → Core`. Audio and API sit side by side and never import
+   each other. UI never reaches past State to the engine's internals; nothing lower
+   imports anything higher. (See `claude-docs/05-architecture.md`.)
 2. **Tone.js lives in exactly one place:** `src/app/audio/`. No other file imports
    `tone`. The rest of the app uses the `AudioEngine` interface only.
-3. **Stores are the single source of truth.** Components never own canonical state.
+3. **`HttpClient` lives in exactly one place:** `src/app/api/`. Components and stores
+   never call it directly — they go through `ApiClient`. Same quarantine logic as Tone.js:
+   one folder to change, and the whole server is trivially fakeable in tests.
+4. **Stores are the single source of truth.** Components never own canonical state.
    Pattern/transport/selection live in signal stores; components render + emit.
-4. **Use the glossary names** (`claude-docs/02-glossary.md`). One name per concept, in
+5. **Use the glossary names** (`claude-docs/02-glossary.md`). One name per concept, in
    code and UI. No synonyms (`step` not `cell/slot`; `track` not `channel/lane`).
-5. **No magic numbers.** `STEP_COUNT`, `TRACK_COUNT`, `DEFAULT_BPM`, etc. live in
+6. **No magic numbers.** `STEP_COUNT`, `TRACK_COUNT`, `DEFAULT_BPM`, etc. live in
    `core/constants.ts`.
-6. **Timing is sacred.** Never schedule audio with `setInterval`/`setTimeout`. Use
+7. **Timing is sacred.** Never schedule audio with `setInterval`/`setTimeout`. Use
    the engine's Tone-based lookahead scheduler (`claude-docs/03-audio-engine.md`).
 
 ## Angular conventions (this is an Angular 22 project)
@@ -69,6 +78,20 @@ Full spec in `claude-docs/01-overview.md`.
 - Auto-save the pattern to `localStorage` via `StorageService`, **debounced**.
 - Include a schema `version` field for safe migrations. Restore on startup; fall
   back to an empty pattern.
+- The **server** stores a beat's pattern as that same versioned `SavedState` blob,
+  opaquely. `StorageService` remains the owner of that schema and its migrations — the
+  API just carries it.
+
+## Session handling
+
+- The **access token is held in memory only** (a signal in `AuthStore`), never in
+  `localStorage`. Anything readable by JavaScript is readable by an XSS.
+- The **refresh token is an httpOnly cookie** the browser sends automatically, scoped to
+  `/auth`. Every API call needs `withCredentials: true` or the cookie never leaves.
+- A session survives reload by calling `POST /auth/refresh` on boot, not by persisting
+  the token. On failure, the person is simply signed out.
+- Access tokens last 15 minutes, so a 401 mid-session is normal: the interceptor refreshes
+  once and retries. Two 401s in a row means sign in again.
 
 ## Testing & quality
 
@@ -140,11 +163,17 @@ clear go-ahead. When unsure whether something is "big," treat it as big and ask.
   Flag the conflict to Adi rather than silently picking.
 - Keep these docs updated when decisions change. Stale docs are worse than none.
 
-## Out of scope for v1 (do not build)
+## Out of scope (do not build)
 
-Per-step velocity, swing, multiple patterns, song mode, user uploads,
-add/remove tracks, accounts/backend. (See `claude-docs/01-overview.md` "deferred".)
+Per-step velocity, swing, song mode, user uploads, add/remove tracks.
+(See `claude-docs/01-overview.md` "deferred".)
 Note: v1 **uses** in-browser synthesis (Tone.js) as its sound source — decided 2026-07-02.
+
+**No longer out of scope:** accounts/backend, and multiple patterns — a saved **beat** is
+a titled pattern, and a person can have many. Decided 2026-08-22.
+
+Still deliberately absent on the auth side: social/Google sign-in (needs a Google Cloud
+project and an account-linking design), password reset, and email verification.
 
 ## Doc map
 
