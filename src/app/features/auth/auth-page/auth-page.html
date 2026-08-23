@@ -1,0 +1,52 @@
+<main class="auth-page">
+  <section class="auth-card">
+    <p class="auth-eyebrow">Pulse</p>
+    <h1 class="auth-heading">{{ heading() }}</h1>
+    <p class="auth-sub">Save your beats and pick them up anywhere.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="auth-label" for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        class="auth-field"
+        formControlName="email"
+        autocomplete="email"
+        placeholder="you@example.com"
+        [attr.aria-invalid]="showsError('email') || null"
+      />
+      @if (showsError('email')) {
+        <p class="auth-hint">Enter a valid email address.</p>
+      }
+
+      <label class="auth-label" for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        class="auth-field"
+        formControlName="password"
+        [attr.autocomplete]="isSignUp() ? 'new-password' : 'current-password'"
+        placeholder="••••••••"
+        [attr.aria-invalid]="showsError('password') || null"
+      />
+      @if (showsError('password')) {
+        <p class="auth-hint">At least {{ minPasswordLength }} characters.</p>
+      }
+
+      @if (error()) {
+        <p class="auth-error" role="alert">{{ error() }}</p>
+      }
+
+      <button class="auth-submit" type="submit" [disabled]="busy()">
+        {{ busy() ? 'Working…' : submitLabel() }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ switchPrompt() }}
+      <button class="auth-link" type="button" (click)="switchMode()">
+        {{ switchAction() }}
+      </button>
+    </p>
+  </section>
+</main>

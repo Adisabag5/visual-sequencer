@@ -13,3 +13,6 @@ export const PITCH_RANGE = 12;
 export const STEPS_PER_BEAT = 4;
 /** Indices 0…3, shared by the ruler and track rows for the 4×4 beat layout. */
 export const BEAT_INDICES: readonly number[] = Array.from({ length: STEPS_PER_BEAT }, (_, i) => i);
+
+/** Mirrors the server's CreateUserDto rule; keep the two in step. */
+export const MIN_PASSWORD_LENGTH = 8;
