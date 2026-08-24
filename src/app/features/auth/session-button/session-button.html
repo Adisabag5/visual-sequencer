@@ -1,0 +1,10 @@
+<button
+  type="button"
+  class="session-btn"
+  [class.is-signed-in]="isSignedIn()"
+  [disabled]="disabled()"
+  [attr.aria-busy]="isBusy() ? 'true' : null"
+  (click)="press()"
+>
+  {{ label() }}
+</button>

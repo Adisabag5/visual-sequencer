@@ -10,9 +10,12 @@
         </p>
         <h1 class="text-[38px] font-bold leading-none tracking-[-0.02em] text-ink">Pulse</h1>
       </div>
-      <p class="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-mono">
-        {{ kitLabel() }}
-      </p>
+      <div class="flex flex-col items-end gap-[10px]">
+        <p class="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-mono">
+          {{ kitLabel() }}
+        </p>
+        <app-session-button />
+      </div>
     </header>
 
     <!-- Instrument card: Transport → Step grid → Visualizer -->
