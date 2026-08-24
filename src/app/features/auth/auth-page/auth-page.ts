@@ -8,9 +8,9 @@ import { MIN_PASSWORD_LENGTH } from '../../../core/constants';
 type Mode = 'sign-in' | 'sign-up';
 
 /**
- * One page for both modes. Sign in and sign up differ only in which endpoint
- * they call and how strictly the password is checked, so splitting them into two
- * routes would duplicate the form for no gain.
+ * One page for both modes. They differ only in which endpoint they call and
+ * whether the password length rule applies, so splitting them into two routes
+ * would duplicate the form for no gain.
  */
 @Component({
   selector: 'app-auth-page',
@@ -40,7 +40,8 @@ export class AuthPage {
 
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(MIN_PASSWORD_LENGTH)]],
+    // length rule is applied per mode — see applyPasswordRules
+    password: ['', [Validators.required]],
   });
 
   readonly minPasswordLength = MIN_PASSWORD_LENGTH;
@@ -55,7 +56,25 @@ export class AuthPage {
 
   switchMode(): void {
     this._mode.update((mode) => (mode === 'sign-in' ? 'sign-up' : 'sign-in'));
+    this.applyPasswordRules();
     this.auth.clearError();
+  }
+
+  /**
+   * The minimum only applies when creating a password. The server's SignInDto
+   * deliberately checks nothing but "non-empty" — enforcing a length here would
+   * lock out anyone whose existing password predates the rule, and would leak
+   * the current policy to an unauthenticated caller.
+   */
+  private applyPasswordRules(): void {
+    const password = this.form.controls.password;
+
+    password.setValidators(
+      this.isSignUp()
+        ? [Validators.required, Validators.minLength(MIN_PASSWORD_LENGTH)]
+        : [Validators.required],
+    );
+    password.updateValueAndValidity();
   }
 
   async submit(): Promise<void> {

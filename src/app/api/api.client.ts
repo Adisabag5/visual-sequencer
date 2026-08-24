@@ -1,6 +1,6 @@
 import { HttpClient, HttpContext, HttpContextToken } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, Observable, throwError } from 'rxjs';
+import { catchError, finalize, Observable, shareReplay, throwError } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 import { AuthResponse, Credentials } from './api.types';
 import { toApiError } from './api.errors';
@@ -27,6 +27,17 @@ export class ApiClient {
   private readonly baseUrl = inject(API_BASE_URL);
 
   /**
+   * The refresh currently in flight, shared by every caller.
+   *
+   * Without this, two requests failing with 401 at once each POST /auth/refresh
+   * with the same cookie. The server rotates on the first one, so the second
+   * presents an already-rotated token — which it correctly reads as theft and
+   * answers by revoking every session the person has. Concurrency on the client
+   * would log them out everywhere.
+   */
+  private inFlightRefresh: Observable<AuthResponse> | null = null;
+
+  /**
    * withCredentials is mandatory on every auth call: the refresh token is an
    * httpOnly cookie, and the browser only sends it cross-origin when asked.
    */
@@ -50,18 +61,29 @@ export class ApiClient {
 
   /** Exchanges the refresh cookie for a new access token; rotates the cookie. */
   refresh(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(
-      `${this.baseUrl}/auth/refresh`,
-      {},
-      { withCredentials: true, context: skipAuth() },
-    );
+    this.inFlightRefresh ??= this.http
+      .post<AuthResponse>(
+        `${this.baseUrl}/auth/refresh`,
+        {},
+        { withCredentials: true, context: skipAuth() },
+      )
+      .pipe(
+        asApiError(),
+        // clear the slot once the request settles, so the next 401 refreshes again
+        finalize(() => (this.inFlightRefresh = null)),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+
+    return this.inFlightRefresh;
   }
 
   signOut(): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(
-      `${this.baseUrl}/auth/signout`,
-      {},
-      { withCredentials: true, context: skipAuth() },
-    );
+    return this.http
+      .post<{ message: string }>(
+        `${this.baseUrl}/auth/signout`,
+        {},
+        { withCredentials: true, context: skipAuth() },
+      )
+      .pipe(asApiError());
   }
 }

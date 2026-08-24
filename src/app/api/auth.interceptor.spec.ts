@@ -70,6 +70,39 @@ describe('authInterceptor', () => {
     expect(tokens.token()).toBe('fresh.jwt');
   });
 
+  it('refreshes ONCE when several requests 401 at the same time', async () => {
+    // Two parallel refreshes would present the same cookie twice. The server
+    // rotates on the first, reads the second as a replayed token, and revokes
+    // every session the person has — concurrency here logs them out everywhere.
+    tokens.set('expired.jwt');
+    const first = firstValueFrom(http.get<{ n: number }>(`${BASE}/beats`));
+    const second = firstValueFrom(http.get<{ n: number }>(`${BASE}/collections`));
+
+    backend.expectOne(`${BASE}/beats`).flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend
+      .expectOne(`${BASE}/collections`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    // exactly one refresh, not two
+    backend.expectOne(`${BASE}/auth/refresh`).flush({
+      access_token: 'fresh.jwt',
+      user: {},
+    });
+
+    // both originals replay with the new token
+    const retries = backend.match(
+      (r) => r.url === `${BASE}/beats` || r.url === `${BASE}/collections`,
+    );
+    expect(retries).toHaveLength(2);
+    retries.forEach((r, i) => {
+      expect(r.request.headers.get('Authorization')).toBe('Bearer fresh.jwt');
+      r.flush({ n: i });
+    });
+
+    await expect(first).resolves.toBeDefined();
+    await expect(second).resolves.toBeDefined();
+  });
+
   it('gives up and clears the token when the refresh itself fails', async () => {
     tokens.set('expired.jwt');
     const pending = firstValueFrom(http.get(`${BASE}/beats`));

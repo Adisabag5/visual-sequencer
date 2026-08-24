@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AccessTokenHolder } from '../api/access-token';
 import { ApiClient } from '../api/api.client';
@@ -37,6 +37,19 @@ export class AuthStore {
   readonly isSignedIn = computed(() => this._status() === 'signed-in');
   readonly isRestoring = computed(() => this._status() === 'restoring');
 
+  constructor() {
+    // The interceptor drops the token when a refresh fails, but it cannot reach
+    // this store (state sits above api). Without noticing, status would stay
+    // 'signed-in' with no token: the guard would keep bouncing the person away
+    // from /auth and they could not sign in again without reloading.
+    effect(() => {
+      if (this.tokens.token() === null && this._status() === 'signed-in') {
+        this._account.set(null);
+        this._status.set('signed-out');
+      }
+    });
+  }
+
   /**
    * Called once at boot. The access token is gone after a reload, but the
    * httpOnly refresh cookie is not — so a session is restored by asking the
@@ -51,9 +64,14 @@ export class AuthStore {
   private async runRestore(): Promise<void> {
     try {
       this.adopt(await firstValueFrom(this.api.refresh()));
-    } catch {
+    } catch (error) {
       // no cookie, expired, or revoked: simply not signed in. Not an error to show.
       this.reset();
+
+      // Only a definite "no" is worth remembering. A network blip is not an
+      // answer, and memoising it would strand a valid session as signed-out for
+      // the life of the page with no way to retry.
+      if ((error as ApiError | null)?.kind !== 'unauthorized') this.restoring = null;
     }
   }
 

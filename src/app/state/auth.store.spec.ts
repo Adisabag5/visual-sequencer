@@ -127,6 +127,60 @@ describe('AuthStore', () => {
     expect(store.error()).toContain('Cannot reach the server');
   });
 
+  it('goes signed-out when the interceptor drops the token after a failed refresh', async () => {
+    // the interceptor cannot reach this store, so it clears the token holder and
+    // nothing else. Without noticing, status stays signed-in with no token and
+    // the guard keeps bouncing the person away from /auth.
+    const { store, tokens } = setup({ signIn: () => of(response) });
+    await store.signIn({ email: 'adi@example.com', password: 'password123' });
+    expect(store.isSignedIn()).toBe(true);
+
+    tokens.clear();
+    TestBed.tick();
+
+    expect(store.isSignedIn()).toBe(false);
+    expect(store.account()).toBeNull();
+  });
+
+  describe('restore memoisation', () => {
+    it('remembers a definite "no session" and does not re-ask', async () => {
+      let calls = 0;
+      const { store } = setup({
+        refresh: () => {
+          calls++;
+
+          return throwError(() => apiError('unauthorized'));
+        },
+      });
+
+      await store.restore();
+      await store.restore();
+
+      expect(calls).toBe(1);
+      expect(store.status()).toBe('signed-out');
+    });
+
+    it('retries after a network blip rather than stranding a valid session', async () => {
+      let calls = 0;
+      const { store } = setup({
+        refresh: () => {
+          calls++;
+
+          // first attempt fails to reach the server; second succeeds
+          return calls === 1 ? throwError(() => apiError('offline')) : of(response);
+        },
+      });
+
+      await store.restore();
+      expect(store.isSignedIn()).toBe(false);
+
+      await store.restore();
+
+      expect(calls).toBe(2);
+      expect(store.isSignedIn()).toBe(true);
+    });
+  });
+
   it('clears the session even if signout fails server-side', async () => {
     const { store, tokens } = setup({
       signIn: () => of(response),

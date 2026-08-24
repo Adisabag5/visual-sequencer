@@ -30,7 +30,13 @@
         [attr.aria-invalid]="showsError('password') || null"
       />
       @if (showsError('password')) {
-        <p class="auth-hint">At least {{ minPasswordLength }} characters.</p>
+        <p class="auth-hint">
+          @if (isSignUp()) {
+            At least {{ minPasswordLength }} characters.
+          } @else {
+            Enter your password.
+          }
+        </p>
       }
 
       @if (error()) {
