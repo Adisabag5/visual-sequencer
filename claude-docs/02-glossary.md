@@ -48,6 +48,7 @@ account side; the server (`~/DEV/nest-server`) uses the same names for its entit
 | **Access token** | The short-lived (15 min) bearer token sent with API calls. Held in memory only. | JWT (in UI), auth token, key |
 | **Beat** | A **pattern** saved under a title and owned by an account. The pattern is the data; the beat is the saved, named thing. | song, project, track (a track is one instrument row) |
 | **Collection** | A named group of a user's beats. A beat belongs to at most one. | folder, playlist, album, set |
+| **Current beat** | The beat this session is editing: the one a later Save updates instead of creating a new row. Unset until the first save, and cleared by Clear or loading a kit. | active beat, open beat, draft |
 
 **Two senses of "beat".** Timing code uses *beat* in the musical sense — `BPM` is beats
 per minute and `STEPS_PER_BEAT` is 4. That sense stays; it is standard music vocabulary and
@@ -59,6 +60,11 @@ memory (what auto-saves to localStorage). A *beat* is a pattern that has been gi
 title and stored against an account on the server. Every beat contains a pattern; a
 pattern only becomes a beat when saved. Note this is why **beat** was struck from
 Step's "avoid" list — it now names something real.
+
+**Why "current beat" exists.** Saving twice should not leave two near-identical beats.
+The first Save creates a beat and the app remembers it; every later Save updates that
+same one. Clear and loading a kit both mean "I am starting something else", so they
+forget it and the next Save creates a fresh beat. Added 2026-09-23.
 
 ## Playback & timing
 

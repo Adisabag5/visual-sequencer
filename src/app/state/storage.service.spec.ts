@@ -55,6 +55,23 @@ describe('StorageService', () => {
     ]);
   });
 
+  it('hands the server the identical blob it writes to localStorage', () => {
+    // The server stores a beat's pattern as this exact shape. If the two ever
+    // diverged, a saved beat would restore differently from a local auto-save.
+    const snapshot = {
+      bpm: 123,
+      activeKit: 'club',
+      tracks: [createTrack('marimba', 0.7)],
+    } as const;
+
+    vi.useFakeTimers();
+    svc.save(snapshot);
+    vi.advanceTimersByTime(300);
+    vi.useRealTimers();
+
+    expect(svc.toSavedState(snapshot)).toEqual(JSON.parse(localStorage.getItem('pulse.state')!));
+  });
+
   it('rejects a wrong schema version on the v2 key', () => {
     localStorage.setItem('pulse.state', JSON.stringify({ version: 3, tracks: [] }));
     expect(svc.restore()).toBeNull();

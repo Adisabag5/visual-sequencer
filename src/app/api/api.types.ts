@@ -35,6 +35,38 @@ export interface Collection {
   updatedAt: string;
 }
 
+/**
+ * A beat's pattern payload, as the server sees it: it validates `version` and
+ * the payload size, and stores the rest opaquely. Everything else travels along
+ * at runtime but is deliberately not described here — the real shape is
+ * `SavedState`, which lives in the State layer, and api/ sits below state/, so
+ * naming it here would invert the layering. Coming back, the State layer hands
+ * the blob to StorageService, which validates it like any untrusted input.
+ */
+export interface BeatData {
+  version: number;
+}
+
+/** A pattern saved under a title and owned by an account. */
+export interface Beat {
+  id: string;
+  userId: string;
+  collectionId: string | null;
+  title: string;
+  data: BeatData;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateBeatBody {
+  title: string;
+  data: BeatData;
+  collectionId?: string;
+}
+
+/** PATCH is partial: saving an existing beat sends `data` and nothing else. */
+export type UpdateBeatBody = Partial<CreateBeatBody>;
+
 export interface PageMeta {
   total: number;
   page: number;
