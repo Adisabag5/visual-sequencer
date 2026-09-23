@@ -93,6 +93,10 @@
   --shadow-card-active:
     0 0 0 3px rgba(158, 134, 232, 0.15), 0 8px 20px -10px rgba(120, 95, 200, 0.5);
   --shadow-card-idle: 0 1px 2px rgba(130, 105, 205, 0.08);
+
+  /* Green neon glow — the design's un-muted / LIVE signal (handoff "Colour").
+     Reused by the session button to mean "signed in". */
+  --glow-green: 0 0 11px rgba(47, 203, 151, 0.55);
 }
 
 body {
