@@ -17,6 +17,8 @@
 
 <app-ui-button variant="pill" ariaLabel="Clear" (press)="clearPattern.emit()">Clear</app-ui-button>
 
+<app-save-control />
+
 <div class="ml-auto flex items-center gap-3">
   <div class="text-right">
     <div class="font-mono text-[28px] font-bold leading-none text-ink">{{ bpm() }}</div>
