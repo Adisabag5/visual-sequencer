@@ -11,11 +11,12 @@ import { TransportBar } from '../transport-bar/transport-bar';
 import { Grid } from '../grid/grid';
 import { KitPanel } from '../kit-panel/kit-panel';
 import { Visualizer } from '../visualizer/visualizer';
+import { SessionButton } from '../../auth/session-button/session-button';
 
 /** Top-level screen. Coordinates stores ↔ audio engine. */
 @Component({
   selector: 'app-sequencer-page',
-  imports: [TransportBar, Grid, KitPanel, Visualizer],
+  imports: [TransportBar, Grid, KitPanel, Visualizer, SessionButton],
   templateUrl: './sequencer-page.html',
   styleUrl: './sequencer-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

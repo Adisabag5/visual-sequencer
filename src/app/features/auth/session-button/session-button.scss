@@ -1,0 +1,29 @@
+/* Session button — white pill signed out, green neon border signed in.
+   The label carries the same information as the colour, so the state is not
+   conveyed by colour alone. */
+.session-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &.is-signed-in {
+    border-color: var(--color-green);
+    box-shadow: var(--glow-green);
+    color: var(--color-green);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
