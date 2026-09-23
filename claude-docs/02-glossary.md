@@ -1,8 +1,8 @@
 # Pulse — Domain Glossary
 
 > Document 2 of 7. The single source of truth for naming.
-> Status: **Locked** (skim and veto any term you dislike). Last updated 2026-07-06
-> (added the v2 Kit-system terms: voice, voice library, category, slot, kit panel).
+> Status: **Locked** (skim and veto any term you dislike). Last updated 2026-08-22
+> (added the account terms: account, session, sign in/up, profile, beat, collection).
 
 **How to use this:** every term below has one agreed name. Use it consistently in
 code (class names, variables, files), UI labels, and all other docs. The
@@ -14,7 +14,7 @@ first, then write the code.
 
 | Term | Definition | Avoid calling it |
 | --- | --- | --- |
-| **Step** | One of the 16 positions in a track. Holds an on/off state and a pitch value. | cell, slot, beat, square |
+| **Step** | One of the 16 positions in a track. Holds an on/off state and a pitch value. | cell, slot, square (and **beat** — see Accounts below, where Beat means a saved pattern) |
 | **Track** | One instrument row. Points at a **voice** (`voiceId`); its name and colors derive from that voice's category. Owns volume, mute, solo. | channel, lane, row (in code), instrument |
 | **Pattern** | The full 8×16 grid plus all track/step settings. The unit that auto-saves. | song, sequence, grid (as data), project |
 | **Grid** | The visual 8×16 layout of step orbs. UI term only — the data is the *pattern*. | board, matrix, table |
@@ -33,6 +33,32 @@ first, then write the code.
 | **Kit panel** | The slide-out left panel with the **Presets** and **Custom** views. | sidebar, drawer, menu |
 | **Kit card** | One preset kit rendered in the Presets view (name, description, voice chips, LOADED/LOAD state). | preset card, tile |
 | **Voice picker** | The Custom view's per-track control for swapping a track's voice. | dropdown (in code), select (as a name) |
+
+## Accounts & library (v3)
+
+Added 2026-08-22, when Pulse gained a backend. These are the only terms for the
+account side; the server (`~/DEV/nest-server`) uses the same names for its entities.
+
+| Term | Definition | Avoid calling it |
+| --- | --- | --- |
+| **Account** | A registered person, identified by email. Owns the profile, collections and beats. | user (in UI copy), member, login (as a noun) |
+| **Profile** | The public-facing details of an account: username, display name, bio, avatar. One per account, created with it. | account, user info, settings |
+| **Session** | A signed-in browser. Survives reload via the refresh cookie; ends at sign-out. | login, token (alone), auth |
+| **Sign in** / **Sign up** / **Sign out** | Entering an existing account / creating one / ending the session. | log in, register, join, logout |
+| **Access token** | The short-lived (15 min) bearer token sent with API calls. Held in memory only. | JWT (in UI), auth token, key |
+| **Beat** | A **pattern** saved under a title and owned by an account. The pattern is the data; the beat is the saved, named thing. | song, project, track (a track is one instrument row) |
+| **Collection** | A named group of a user's beats. A beat belongs to at most one. | folder, playlist, album, set |
+
+**Two senses of "beat".** Timing code uses *beat* in the musical sense — `BPM` is beats
+per minute and `STEPS_PER_BEAT` is 4. That sense stays; it is standard music vocabulary and
+only ever appears in transport/timing code. The capital-B **Beat** below is the saved
+artefact. If a name would be ambiguous, qualify it (`savedBeat`, `stepsPerBeat`).
+
+**Beat vs Pattern** — the distinction that matters: a *pattern* is the 8×16 grid in
+memory (what auto-saves to localStorage). A *beat* is a pattern that has been given a
+title and stored against an account on the server. Every beat contains a pattern; a
+pattern only becomes a beat when saved. Note this is why **beat** was struck from
+Step's "avoid" list — it now names something real.
 
 ## Playback & timing
 
