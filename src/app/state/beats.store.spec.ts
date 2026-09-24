@@ -5,11 +5,24 @@ import { ApiClient } from '../api/api.client';
 import { Beat } from '../api/api.types';
 import { ApiError } from '../api/api.errors';
 import { BeatsStore } from './beats.store';
-import { PersistedSnapshot } from './storage.service';
-import { createTrack } from '../core/kit';
+import { PatternStore } from './pattern.store';
+import { TransportStore } from './transport.store';
+import { StorageService } from './storage.service';
+import { installLocalStorageMock } from '../testing/local-storage-mock';
 
-function snapshot(): PersistedSnapshot {
-  return { bpm: 118, activeKit: 'musical8', tracks: [createTrack('kick', 0.9)] };
+function page(items: Beat[], overrides: Record<string, unknown> = {}) {
+  return {
+    items,
+    meta: {
+      total: items.length,
+      page: 1,
+      limit: 20,
+      totalPages: 1,
+      hasNext: false,
+      hasPrev: false,
+      ...overrides,
+    },
+  };
 }
 
 function beat(overrides: Partial<Beat> = {}): Beat {
@@ -19,102 +32,180 @@ function beat(overrides: Partial<Beat> = {}): Beat {
     collectionId: null,
     title: 'Lo-fi',
     data: { version: 2 },
-    createdAt: '2026-09-23T10:00:00.000Z',
-    updatedAt: '2026-09-23T10:00:00.000Z',
+    createdAt: '2026-09-24T10:00:00.000Z',
+    updatedAt: '2026-09-24T10:00:00.000Z',
     ...overrides,
   };
 }
 
 function setup() {
+  installLocalStorageMock();
+
   const api = {
     createBeat: vi.fn().mockReturnValue(of(beat())),
-    updateBeat: vi.fn().mockReturnValue(of(beat({ updatedAt: '2026-09-23T11:00:00.000Z' }))),
-    listBeats: vi.fn().mockReturnValue(of({ items: [beat()], meta: { total: 3 } })),
+    updateBeat: vi.fn().mockReturnValue(of(beat({ title: 'Renamed' }))),
+    deleteBeat: vi.fn().mockReturnValue(of(undefined)),
+    listBeats: vi.fn().mockReturnValue(of(page([beat()]))),
   };
 
   TestBed.resetTestingModule();
   TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: api }] });
 
-  return { api, store: TestBed.inject(BeatsStore) };
+  const store = TestBed.inject(BeatsStore);
+  const pattern = TestBed.inject(PatternStore);
+  const transport = TestBed.inject(TransportStore);
+  const storage = TestBed.inject(StorageService);
+
+  /** A valid saved blob for the current grid, with overrides applied. */
+  const savedBlob = (bpm: number) =>
+    storage.toSavedState({ bpm, activeKit: pattern.activeKit(), tracks: pattern.tracks() });
+
+  return { api, store, pattern, transport, savedBlob };
 }
 
 describe('BeatsStore', () => {
-  let harness: ReturnType<typeof setup>;
+  let h: ReturnType<typeof setup>;
 
   beforeEach(() => {
-    harness = setup();
+    h = setup();
   });
 
-  it('asks for a title only before the first save', async () => {
-    expect(harness.store.needsTitle()).toBe(true);
+  describe('saving', () => {
+    it('creates on the first save and patches on the next', async () => {
+      await h.store.save('Lo-fi');
+      await h.store.save();
 
-    await harness.store.save(snapshot(), 'Lo-fi');
+      // five clicks must not leave five near-identical beats
+      expect(h.api.createBeat).toHaveBeenCalledOnce();
+      expect(h.api.updateBeat).toHaveBeenCalledOnce();
+      expect(h.api.updateBeat).toHaveBeenCalledWith('7', { data: expect.anything() });
+    });
 
-    expect(harness.store.needsTitle()).toBe(false);
+    it('sends the versioned blob the grid would auto-save', async () => {
+      await h.store.save('Lo-fi');
+
+      const body = h.api.createBeat.mock.calls[0][0];
+      expect(body.title).toBe('Lo-fi');
+      expect(body.data.version).toBe(2);
+      expect(body.data.tracks).toHaveLength(8);
+    });
+
+    it('surfaces a failure without adopting a current beat', async () => {
+      h.api.createBeat.mockReturnValue(throwError(() => ({ kind: 'offline' }) as ApiError));
+
+      expect(await h.store.save('Lo-fi')).toBe(false);
+      expect(h.store.status()).toBe('error');
+      // a failed create must not look saved, or the next save would patch nothing
+      expect(h.store.needsTitle()).toBe(true);
+    });
   });
 
-  it('creates on the first save and patches on the next', async () => {
-    await harness.store.save(snapshot(), 'Lo-fi');
-    await harness.store.save(snapshot());
+  describe('unsaved changes', () => {
+    it('is clean on a fresh page', () => {
+      expect(h.store.isDirty()).toBe(false);
+    });
 
-    // the whole point: five clicks must not leave five near-identical beats
-    expect(harness.api.createBeat).toHaveBeenCalledOnce();
-    expect(harness.api.updateBeat).toHaveBeenCalledOnce();
-    expect(harness.api.updateBeat).toHaveBeenCalledWith('7', { data: expect.anything() });
+    it('notices an edit to the grid', () => {
+      h.pattern.toggleStep(0, 0);
+
+      expect(h.store.isDirty()).toBe(true);
+    });
+
+    it('notices a tempo change', () => {
+      h.transport.setBpm(140);
+
+      expect(h.store.isDirty()).toBe(true);
+    });
+
+    it('is clean again after saving', async () => {
+      h.pattern.toggleStep(0, 0);
+      await h.store.save('Lo-fi');
+
+      expect(h.store.isDirty()).toBe(false);
+    });
+
+    it('is clean after reset, since starting over is deliberate', () => {
+      h.pattern.toggleStep(0, 0);
+      h.store.reset();
+
+      expect(h.store.isDirty()).toBe(false);
+    });
   });
 
-  it('sends the versioned SavedState blob as data', async () => {
-    await harness.store.save(snapshot(), 'Lo-fi');
+  describe('loading', () => {
+    it('puts the beat on the grid and adopts it', () => {
+      const saved = h.savedBlob(96);
+      saved.tracks[0].steps[3].on = true;
 
-    const body = harness.api.createBeat.mock.calls[0][0];
-    expect(body.title).toBe('Lo-fi');
-    expect(body.data.version).toBe(2);
-    expect(body.data.bpm).toBe(118);
-    expect(body.data.tracks).toHaveLength(1);
+      expect(h.store.load(beat({ id: '9', data: saved }))).toBe(true);
+      expect(h.transport.bpm()).toBe(96);
+      expect(h.pattern.tracks()[0].steps[3].on).toBe(true);
+      expect(h.store.currentBeat()?.id).toBe('9');
+      // the loaded beat is now the current one, so the next save patches it
+      expect(h.store.needsTitle()).toBe(false);
+      expect(h.store.isDirty()).toBe(false);
+    });
+
+    it('refuses a blob it cannot read, leaving the grid alone', () => {
+      const before = h.pattern.tracks();
+
+      expect(h.store.load(beat({ data: { version: 99 } }))).toBe(false);
+      expect(h.pattern.tracks()).toBe(before);
+      expect(h.store.currentBeat()).toBeNull();
+      expect(h.store.error()).toContain('could not be read');
+    });
   });
 
-  it('trims the title, since the server requires at least one character', async () => {
-    await harness.store.save(snapshot(), '  Lo-fi  ');
+  describe('the library', () => {
+    it('fetches the first page', async () => {
+      await h.store.refresh();
 
-    expect(harness.api.createBeat.mock.calls[0][0].title).toBe('Lo-fi');
-  });
+      expect(h.store.beats()).toHaveLength(1);
+      expect(h.store.total()).toBe(1);
+      expect(h.store.hasNext()).toBe(false);
+    });
 
-  it('creates a new beat again after a reset', async () => {
-    await harness.store.save(snapshot(), 'Lo-fi');
-    harness.store.reset();
+    it('reports a listing failure without throwing', async () => {
+      h.api.listBeats.mockReturnValue(throwError(() => ({ kind: 'offline' }) as ApiError));
 
-    expect(harness.store.needsTitle()).toBe(true);
+      await h.store.refresh();
 
-    await harness.store.save(snapshot(), 'Second');
+      expect(h.store.listStatus()).toBe('error');
+      expect(h.store.listError()).toContain('Cannot reach the server');
+    });
 
-    expect(harness.api.createBeat).toHaveBeenCalledTimes(2);
-  });
+    it('renames in the list and on the current beat', async () => {
+      await h.store.save('Lo-fi');
+      await h.store.refresh();
 
-  it('reports the account total after a save', async () => {
-    await harness.store.save(snapshot(), 'Lo-fi');
+      expect(await h.store.rename('7', '  Renamed  ')).toBe(true);
+      // trimmed, because the server requires 1-100 characters
+      expect(h.api.updateBeat).toHaveBeenCalledWith('7', { title: 'Renamed' });
+      expect(h.store.beats()[0].title).toBe('Renamed');
+      expect(h.store.currentBeat()?.title).toBe('Renamed');
+    });
 
-    expect(harness.store.total()).toBe(3);
-  });
+    it('refuses a blank rename without calling the server', async () => {
+      expect(await h.store.rename('7', '   ')).toBe(false);
+      expect(h.api.updateBeat).not.toHaveBeenCalled();
+    });
 
-  it('keeps the save successful when the list call fails', async () => {
-    harness.api.listBeats.mockReturnValue(throwError(() => ({ kind: 'offline' }) as ApiError));
+    it('drops a deleted beat from the list', async () => {
+      await h.store.refresh();
 
-    const ok = await harness.store.save(snapshot(), 'Lo-fi');
+      expect(await h.store.remove('7')).toBe(true);
+      expect(h.store.beats()).toHaveLength(0);
+      expect(h.store.total()).toBe(0);
+    });
 
-    expect(ok).toBe(true);
-    expect(harness.store.status()).toBe('saved');
-    expect(harness.store.total()).toBeNull();
-  });
+    it('detaches the current beat when it is the one deleted', async () => {
+      await h.store.save('Lo-fi');
 
-  it('surfaces a failure without adopting a current beat', async () => {
-    harness.api.createBeat.mockReturnValue(throwError(() => ({ kind: 'offline' }) as ApiError));
+      await h.store.remove('7');
 
-    const ok = await harness.store.save(snapshot(), 'Lo-fi');
-
-    expect(ok).toBe(false);
-    expect(harness.store.status()).toBe('error');
-    expect(harness.store.error()).toContain('Cannot reach the server');
-    // a failed create must not look like a saved beat, or the next save would PATCH nothing
-    expect(harness.store.needsTitle()).toBe(true);
+      // the grid is untouched, but the next save must create rather than patch a dead row
+      expect(h.store.currentBeat()).toBeNull();
+      expect(h.store.needsTitle()).toBe(true);
+    });
   });
 });

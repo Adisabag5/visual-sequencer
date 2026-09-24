@@ -4,3 +4,12 @@
   box-shadow: var(--shadow-card);
   backdrop-filter: blur(20px);
 }
+
+/* Current beat: the standing answer to "what am I editing, and is it saved?" */
+.beat-label {
+  color: var(--color-green);
+}
+
+.beat-unsaved {
+  color: var(--color-amber);
+}

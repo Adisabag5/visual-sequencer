@@ -5,7 +5,7 @@ import { DEFAULT_KIT_ID, getKit } from '../core/kits';
 import { KitId, Step, Track, VoiceId } from '../core/models';
 import { clamp01, clampPitch } from '../core/util';
 import { isVoiceId } from '../core/voice-library';
-import { SavedTrack, StorageService } from './storage.service';
+import { SavedState, SavedTrack, StorageService } from './storage.service';
 
 /**
  * Single source of truth for the pattern (tracks + steps) and the active kit.
@@ -25,13 +25,25 @@ export class PatternStore {
 
   constructor() {
     const saved = inject(StorageService).restore();
-    if (saved) {
-      const tracks = applySaved(saved.tracks);
-      if (tracks) {
-        this._tracks.set(tracks);
-        this._activeKit.set(saved.activeKit);
-      }
-    }
+    if (saved) this.loadSaved(saved);
+  }
+
+  /**
+   * Replace the whole pattern with a saved one — the boot restore, and loading
+   * a beat from the Library, are the same act. A blob that does not fit the
+   * schema is ignored rather than half-applied, so a bad save can never leave
+   * the grid in a state that is neither the old pattern nor the new one.
+   *
+   * Returns whether the state was applied.
+   */
+  loadSaved(saved: SavedState): boolean {
+    const tracks = applySaved(saved.tracks);
+    if (!tracks) return false;
+
+    this._tracks.set(tracks);
+    this._activeKit.set(saved.activeKit);
+
+    return true;
   }
 
   /**

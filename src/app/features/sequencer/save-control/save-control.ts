@@ -11,8 +11,6 @@ import {
 import { Router } from '@angular/router';
 import { AuthStore } from '../../../state/auth.store';
 import { BeatsStore } from '../../../state/beats.store';
-import { PatternStore } from '../../../state/pattern.store';
-import { TransportStore } from '../../../state/transport.store';
 
 /** How long a confirmation stays up before the control returns to Save. */
 const CONFIRM_MS = 2200;
@@ -37,8 +35,6 @@ const MAX_TITLE = 100;
 export class SaveControl {
   private readonly beats = inject(BeatsStore);
   private readonly auth = inject(AuthStore);
-  private readonly pattern = inject(PatternStore);
-  private readonly transport = inject(TransportStore);
   private readonly router = inject(Router);
 
   private readonly _titling = signal(false);
@@ -108,14 +104,7 @@ export class SaveControl {
   }
 
   private async commit(title?: string): Promise<void> {
-    await this.beats.save(
-      {
-        bpm: this.transport.bpm(),
-        activeKit: this.pattern.activeKit(),
-        tracks: this.pattern.tracks(),
-      },
-      title,
-    );
+    await this.beats.save(title);
 
     // Clear the confirmation on its own, so the bar does not keep a stale
     // "Saved" next to a pattern that has moved on since.

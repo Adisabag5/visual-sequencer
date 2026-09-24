@@ -200,4 +200,39 @@ describe('PatternStore', () => {
     expect(store.activeKit()).toBe('musical8');
     expect(store.tracks()[0].steps[0].on).toBe(true); // Musical 8 kick pattern
   });
+
+  describe('loadSaved', () => {
+    it('replaces the whole pattern and reports success', () => {
+      const store = TestBed.inject(PatternStore);
+
+      const applied = store.loadSaved({
+        version: 2,
+        bpm: 96,
+        activeKit: 'lofi',
+        tracks: savedTracksFromKit('lofi'),
+      });
+
+      expect(applied).toBe(true);
+      expect(store.activeKit()).toBe('lofi');
+      expect(store.tracks()).toEqual(tracksFromKit(getKit('lofi')));
+    });
+
+    it('leaves the grid untouched when the blob does not fit', () => {
+      const store = TestBed.inject(PatternStore);
+      const before = store.tracks();
+
+      // half-applying a bad blob would leave the grid neither the old pattern
+      // nor the new one, which is worse than refusing it
+      const applied = store.loadSaved({
+        version: 2,
+        bpm: 96,
+        activeKit: 'lofi',
+        tracks: savedTracksFromKit('lofi').slice(0, 3),
+      });
+
+      expect(applied).toBe(false);
+      expect(store.tracks()).toBe(before);
+      expect(store.activeKit()).toBe('musical8');
+    });
+  });
 });

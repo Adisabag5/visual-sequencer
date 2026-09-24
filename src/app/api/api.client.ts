@@ -106,6 +106,13 @@ export class ApiClient {
       .pipe(asApiError());
   }
 
+  /** 204 on success; the body is empty, so nothing comes back. */
+  deleteBeat(id: string): Observable<void> {
+    return this.http
+      .delete<void>(`${this.baseUrl}/beats/${id}`, { withCredentials: true })
+      .pipe(asApiError());
+  }
+
   /**
    * The server answers `{items, meta}`, never a bare array, and defaults to
    * page 1 / limit 20. Callers that only want the count read `meta.total`.

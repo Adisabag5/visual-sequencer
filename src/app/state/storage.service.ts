@@ -59,10 +59,21 @@ export class StorageService {
    */
   restore(): SavedState | null {
     const raw = readRaw(KEY);
-    if (raw !== null) return sanitizeV2(parseJson(raw));
+    if (raw !== null) return this.parse(parseJson(raw));
     const legacy = readRaw(LEGACY_KEY);
-    if (legacy !== null) return migrateV1(parseJson(legacy));
+    if (legacy !== null) return this.parse(parseJson(legacy));
     return null;
+  }
+
+  /**
+   * Validate an untrusted blob into saved state, or null if it fits neither
+   * schema. A beat's `data` comes back from the server exactly as it was sent,
+   * but "our own data" is not the same as "trusted data" — it may have been
+   * written by an older build, or by another device on a newer one. This is the
+   * same gate the localStorage restore goes through, for the same reason.
+   */
+  parse(data: unknown): SavedState | null {
+    return sanitizeV2(data) ?? migrateV1(data);
   }
 
   /**
