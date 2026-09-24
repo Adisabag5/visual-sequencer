@@ -4,6 +4,7 @@ import { KITS } from '../../../core/kits';
 import { KitId, VoiceId } from '../../../core/models';
 import { KitMode, KitPanelStore } from '../../../state/kit-panel.store';
 import { PatternStore } from '../../../state/pattern.store';
+import { BeatsStore } from '../../../state/beats.store';
 import { KitCard } from '../kit-card/kit-card';
 import { VoicePicker } from '../voice-picker/voice-picker';
 
@@ -21,6 +22,7 @@ import { VoicePicker } from '../voice-picker/voice-picker';
 })
 export class KitPanel {
   private readonly pattern = inject(PatternStore);
+  private readonly beats = inject(BeatsStore);
   private readonly engine = inject(AudioEngine);
   protected readonly panel = inject(KitPanelStore);
 
@@ -34,6 +36,8 @@ export class KitPanel {
 
   protected loadKit(id: KitId): void {
     this.pattern.loadKit(id);
+    // A kit load replaces the whole pattern, so the next Save starts a new beat.
+    this.beats.reset();
   }
 
   /** Swap one track's voice, then audition it once (unlock inside the gesture). */

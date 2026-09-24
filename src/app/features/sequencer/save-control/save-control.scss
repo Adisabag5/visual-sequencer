@@ -1,0 +1,90 @@
+/* Save sits beside Clear, so it wears the same white pill. */
+:host {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.save-btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid var(--ring-cell);
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+/* The inline title field replaces the button in place — no overlay, no modal. */
+.save-titling {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-title-input {
+  width: 190px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--ring-field);
+  background: var(--field-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+
+  &::placeholder {
+    color: var(--color-slot-num);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-eyebrow);
+    box-shadow: 0 0 0 3px var(--ring-mute);
+  }
+}
+
+.save-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  border: 1px solid var(--ring-cell);
+  background: #fff;
+  box-shadow: var(--shadow-btn);
+  color: var(--color-btn);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.save-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--color-green);
+}
+
+.save-count {
+  color: var(--color-mono);
+}
+
+.save-note-error {
+  color: var(--color-amber);
+}

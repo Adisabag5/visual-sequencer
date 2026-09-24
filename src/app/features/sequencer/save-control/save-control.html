@@ -1,0 +1,47 @@
+@if (titling()) {
+  <span class="save-titling">
+    <input
+      class="save-title-input"
+      type="text"
+      placeholder="Name this beat"
+      aria-label="Beat title"
+      [attr.maxlength]="maxTitle"
+      [value]="title()"
+      (input)="onTitleInput($any($event.target).value)"
+      (keydown.enter)="confirm()"
+      (keydown.escape)="cancel()"
+      #titleInput
+    />
+    <button
+      type="button"
+      class="save-icon-btn"
+      aria-label="Confirm title"
+      [disabled]="!canConfirm()"
+      (click)="confirm()"
+    >
+      ✓
+    </button>
+    <button type="button" class="save-icon-btn" aria-label="Cancel" (click)="cancel()">✕</button>
+  </span>
+} @else {
+  <button type="button" class="save-btn" [disabled]="isSaving()" (click)="press()">
+    @if (isSaving()) {
+      Saving…
+    } @else {
+      Save
+    }
+  </button>
+}
+
+@if (justSaved()) {
+  <span class="save-note" role="status">
+    Saved
+    @if (total() !== null) {
+      <span class="save-count"> · {{ total() }} beats</span>
+    }
+  </span>
+}
+
+@if (failed()) {
+  <span class="save-note save-note-error" role="alert">{{ error() }}</span>
+}

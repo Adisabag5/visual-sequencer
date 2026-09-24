@@ -7,6 +7,7 @@ import { KitPanelStore } from '../../../state/kit-panel.store';
 import { PatternStore } from '../../../state/pattern.store';
 import { TransportStore } from '../../../state/transport.store';
 import { StorageService } from '../../../state/storage.service';
+import { BeatsStore } from '../../../state/beats.store';
 import { TransportBar } from '../transport-bar/transport-bar';
 import { Grid } from '../grid/grid';
 import { KitPanel } from '../kit-panel/kit-panel';
@@ -27,6 +28,7 @@ export class SequencerPage {
   protected readonly kitPanel = inject(KitPanelStore);
   private readonly engine = inject(AudioEngine);
   private readonly storage = inject(StorageService);
+  private readonly beats = inject(BeatsStore);
 
   /** Header meta: "{kit name | Custom kit} · 8 · 16". */
   protected readonly kitLabel = computed(() => {
@@ -50,6 +52,15 @@ export class SequencerPage {
         tracks: this.pattern.tracks(),
       }),
     );
+  }
+
+  /**
+   * Clearing means "I am starting something else", so the next Save creates a
+   * new beat rather than overwriting the one just cleared away.
+   */
+  protected onClear(): void {
+    this.pattern.clear();
+    this.beats.reset();
   }
 
   /** Toggle a step (instant) and audition it if it just turned on and is audible. */

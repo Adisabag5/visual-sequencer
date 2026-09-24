@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { TransportStore } from '../../../state/transport.store';
 import { UiButton } from '../../../shared/ui-button/ui-button';
+import { SaveControl } from '../save-control/save-control';
 
 /** Transport controls: play/stop, clear, BPM. Reads transport state, emits intent. */
 @Component({
   selector: 'app-transport-bar',
-  imports: [UiButton],
+  imports: [UiButton, SaveControl],
   templateUrl: './transport-bar.html',
   styleUrl: './transport-bar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
