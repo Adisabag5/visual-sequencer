@@ -21,14 +21,12 @@ import { VoicePicker } from '../voice-picker/voice-picker';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class KitPanel {
-  private readonly pattern = inject(PatternStore);
+  protected readonly pattern = inject(PatternStore);
   private readonly beats = inject(BeatsStore);
   private readonly engine = inject(AudioEngine);
   protected readonly panel = inject(KitPanelStore);
 
   protected readonly kits = KITS;
-  protected readonly tracks = this.pattern.tracks;
-  protected readonly activeKit = this.pattern.activeKit;
 
   protected setMode(mode: KitMode): void {
     this.panel.setKitMode(mode);

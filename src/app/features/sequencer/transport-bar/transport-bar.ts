@@ -15,10 +15,7 @@ import { SaveControl } from '../save-control/save-control';
   },
 })
 export class TransportBar {
-  private readonly transport = inject(TransportStore);
-
-  readonly bpm = this.transport.bpm;
-  readonly isPlaying = this.transport.isPlaying;
+  protected readonly transport = inject(TransportStore);
 
   readonly togglePlay = output<void>();
   /** Emits a tempo change in BPM (+/−). */
