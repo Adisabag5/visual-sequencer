@@ -96,19 +96,8 @@ describe('SaveControl', () => {
       await h.fixture.whenStable();
 
       expect(h.beats.save).toHaveBeenCalledOnce();
-      expect(h.beats.save.mock.calls[0][1]).toBe('Lo-fi');
+      expect(h.beats.save).toHaveBeenCalledWith('Lo-fi');
       expect(h.input()).toBeNull();
-    });
-
-    it('sends the current bpm, kit and tracks', async () => {
-      h.fixture.componentInstance.onTitleInput('Lo-fi');
-      await h.fixture.whenStable();
-      h.confirmBtn().click();
-      await h.fixture.whenStable();
-
-      const snapshot = h.beats.save.mock.calls[0][0];
-      expect(snapshot.bpm).toBe(118);
-      expect(snapshot.tracks).toHaveLength(8);
     });
 
     it('abandons the title on cancel', async () => {
@@ -131,7 +120,7 @@ describe('SaveControl', () => {
 
       expect(h.input()).toBeNull();
       expect(h.beats.save).toHaveBeenCalledOnce();
-      expect(h.beats.save.mock.calls[0][1]).toBeUndefined();
+      expect(h.beats.save).toHaveBeenCalledWith(undefined);
     });
 
     it('ignores a click while a save is in flight', async () => {

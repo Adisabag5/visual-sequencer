@@ -49,6 +49,9 @@ account side; the server (`~/DEV/nest-server`) uses the same names for its entit
 | **Beat** | A **pattern** saved under a title and owned by an account. The pattern is the data; the beat is the saved, named thing. | song, project, track (a track is one instrument row) |
 | **Collection** | A named group of a user's beats. A beat belongs to at most one. | folder, playlist, album, set |
 | **Current beat** | The beat this session is editing: the one a later Save updates instead of creating a new row. Unset until the first save, and cleared by Clear or loading a kit. | active beat, open beat, draft |
+| **Library** | The panel listing an account's saved beats. The Kit panel's counterpart on the right. | beats panel, my beats, gallery, browser |
+| **Load** (a beat) | Replace the grid with a saved beat's pattern, making it the current beat. The same verb the Kit panel already uses for kits. | open, restore, import, select |
+| **Unsaved changes** | The grid differs from the current beat as last saved. Loading another beat over them would lose them. | dirty, modified, pending |
 
 **Two senses of "beat".** Timing code uses *beat* in the musical sense — `BPM` is beats
 per minute and `STEPS_PER_BEAT` is 4. That sense stays; it is standard music vocabulary and
@@ -65,6 +68,10 @@ Step's "avoid" list — it now names something real.
 The first Save creates a beat and the app remembers it; every later Save updates that
 same one. Clear and loading a kit both mean "I am starting something else", so they
 forget it and the next Save creates a fresh beat. Added 2026-09-23.
+
+**One verb for one gesture.** The Kit panel says LOAD for kits, so the Library says **Load**
+for beats rather than Open — two words for "put this on the grid" is exactly the kind of
+drift this file exists to prevent. Added 2026-09-24.
 
 ## Playback & timing
 
