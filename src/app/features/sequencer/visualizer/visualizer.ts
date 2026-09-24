@@ -42,10 +42,8 @@ const BAR_GAP = 5;
 })
 export class Visualizer implements AfterViewInit {
   private readonly engine = inject(AudioEngine);
-  private readonly transport = inject(TransportStore);
+  protected readonly transport = inject(TransportStore);
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
-
-  readonly isPlaying = this.transport.isPlaying;
 
   private ctx: CanvasRenderingContext2D | null = null;
   private rafId?: number;
@@ -55,7 +53,7 @@ export class Visualizer implements AfterViewInit {
   constructor() {
     // Run the animation loop only while playing (idle otherwise).
     effect(() => {
-      if (this.isPlaying()) this.start();
+      if (this.transport.isPlaying()) this.start();
       else this.stop();
     });
     inject(DestroyRef).onDestroy(() => this.stop());
@@ -69,7 +67,7 @@ export class Visualizer implements AfterViewInit {
     }
     this.engine.onStepTrigger((e) => this.spawn(e));
     this.resize();
-    if (this.isPlaying()) this.start();
+    if (this.transport.isPlaying()) this.start();
     else this.drawIdle();
   }
 

@@ -33,7 +33,7 @@ const MAX_TITLE = 100;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SaveControl {
-  private readonly beats = inject(BeatsStore);
+  protected readonly beats = inject(BeatsStore);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
 
@@ -54,20 +54,15 @@ export class SaveControl {
 
   readonly titling = this._titling.asReadonly();
   readonly title = this._title.asReadonly();
-  readonly status = this.beats.status;
-  readonly error = this.beats.error;
-  readonly total = this.beats.total;
-
-  readonly isSaving = this.beats.isSaving;
-  readonly justSaved = computed(() => this.status() === 'saved');
-  readonly failed = computed(() => this.status() === 'error');
+  readonly justSaved = computed(() => this.beats.status() === 'saved');
+  readonly failed = computed(() => this.beats.status() === 'error');
 
   /** The server rejects an empty title, so confirm stays inert until there is one. */
   readonly canConfirm = computed(() => this._title().trim().length > 0);
 
   /** Start a save: route to auth, ask for a title, or just save. */
   press(): void {
-    if (this.isSaving()) return;
+    if (this.beats.isSaving()) return;
 
     if (!this.auth.isSignedIn()) {
       void this.router.navigate(['/auth']);
@@ -91,7 +86,7 @@ export class SaveControl {
 
   /** Confirm the title field and create the beat. */
   async confirm(): Promise<void> {
-    if (!this.canConfirm() || this.isSaving()) return;
+    if (!this.canConfirm() || this.beats.isSaving()) return;
 
     const title = this._title();
     this._titling.set(false);

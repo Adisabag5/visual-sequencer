@@ -1,7 +1,7 @@
 <button
   type="button"
   class="session-btn"
-  [class.is-signed-in]="isSignedIn()"
+  [class.is-signed-in]="auth.isSignedIn()"
   [disabled]="disabled()"
   [attr.aria-busy]="isBusy() ? 'true' : null"
   (click)="press()"
