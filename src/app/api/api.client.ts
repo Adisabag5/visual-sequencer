@@ -117,9 +117,12 @@ export class ApiClient {
    * The server answers `{items, meta}`, never a bare array, and defaults to
    * page 1 / limit 20. Callers that only want the count read `meta.total`.
    */
-  listBeats(): Observable<Paginated<Beat>> {
+  listBeats(page = 1): Observable<Paginated<Beat>> {
     return this.http
-      .get<Paginated<Beat>>(`${this.baseUrl}/beats`, { withCredentials: true })
+      .get<Paginated<Beat>>(`${this.baseUrl}/beats`, {
+        withCredentials: true,
+        params: { page },
+      })
       .pipe(asApiError());
   }
 }

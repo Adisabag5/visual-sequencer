@@ -1,0 +1,63 @@
+<div class="beat-row" [class.beat-row-active]="active()">
+  @if (renaming()) {
+    <div class="beat-rename">
+      <input
+        class="beat-rename-input"
+        type="text"
+        aria-label="Beat title"
+        [attr.maxlength]="maxTitle"
+        [value]="draft()"
+        (input)="onDraftInput($any($event.target).value)"
+        (keydown.enter)="confirmRename()"
+        (keydown.escape)="cancelRename()"
+      />
+      <button
+        type="button"
+        class="beat-icon-btn"
+        aria-label="Confirm new title"
+        [disabled]="!canConfirm()"
+        (click)="confirmRename()"
+      >
+        ✓
+      </button>
+      <button
+        type="button"
+        class="beat-icon-btn"
+        aria-label="Cancel rename"
+        (click)="cancelRename()"
+      >
+        ✕
+      </button>
+    </div>
+  } @else {
+    <div class="beat-main">
+      <p class="beat-title">{{ beat().title }}</p>
+      <p class="beat-meta">
+        {{ beat().updatedAt | date: 'd MMM HH:mm' }}
+        @if (active()) {
+          <span class="beat-active-mark"> · on the grid</span>
+        }
+      </p>
+    </div>
+
+    <div class="beat-actions">
+      <button type="button" class="beat-load" (click)="loadBeat.emit()">Load →</button>
+      <button
+        type="button"
+        class="beat-icon-btn"
+        [attr.aria-label]="'Rename ' + beat().title"
+        (click)="startRename()"
+      >
+        ✎
+      </button>
+      <button
+        type="button"
+        class="beat-icon-btn beat-icon-danger"
+        [attr.aria-label]="'Delete ' + beat().title"
+        (click)="remove.emit()"
+      >
+        ✕
+      </button>
+    </div>
+  }
+</div>

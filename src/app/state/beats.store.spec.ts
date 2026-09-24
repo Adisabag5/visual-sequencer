@@ -190,6 +190,44 @@ describe('BeatsStore', () => {
       expect(h.api.updateBeat).not.toHaveBeenCalled();
     });
 
+    it('appends the next page and remembers where it is', async () => {
+      h.api.listBeats.mockReturnValueOnce(
+        of(page([beat({ id: '1' })], { hasNext: true, total: 2 })),
+      );
+      await h.store.refresh();
+
+      h.api.listBeats.mockReturnValueOnce(of(page([beat({ id: '2' })], { page: 2, total: 2 })));
+      await h.store.loadMore();
+
+      expect(h.api.listBeats).toHaveBeenLastCalledWith(2);
+      expect(h.store.beats().map((b) => b.id)).toEqual(['1', '2']);
+      expect(h.store.hasNext()).toBe(false);
+    });
+
+    it('does not repeat a row that offset pagination shifted onto both pages', async () => {
+      h.api.listBeats.mockReturnValueOnce(
+        of(page([beat({ id: '1' })], { hasNext: true, total: 2 })),
+      );
+      await h.store.refresh();
+
+      // a beat saved between the two requests pushes row 1 onto page 2 as well
+      h.api.listBeats.mockReturnValueOnce(
+        of(page([beat({ id: '1' }), beat({ id: '2' })], { page: 2, total: 2 })),
+      );
+      await h.store.loadMore();
+
+      expect(h.store.beats().map((b) => b.id)).toEqual(['1', '2']);
+    });
+
+    it('will not ask for more when there is no next page', async () => {
+      await h.store.refresh();
+      h.api.listBeats.mockClear();
+
+      await h.store.loadMore();
+
+      expect(h.api.listBeats).not.toHaveBeenCalled();
+    });
+
     it('drops a deleted beat from the list', async () => {
       await h.store.refresh();
 

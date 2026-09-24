@@ -1,0 +1,114 @@
+/* One Library row. Mirrors the kit card's surface so the two panels read alike. */
+.beat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--ring-cell);
+  background: #fff;
+  box-shadow: var(--shadow-card-idle);
+}
+
+/* The beat currently on the grid, marked the way an active kit card is. */
+.beat-row-active {
+  background: var(--card-active-bg);
+  box-shadow: var(--shadow-card-active);
+}
+
+.beat-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.beat-title {
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.beat-meta {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--color-mono);
+}
+
+.beat-active-mark {
+  color: var(--color-green);
+}
+
+.beat-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.beat-load {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--ring-cell);
+  border-radius: 9999px;
+  background: #fff;
+  color: var(--color-btn);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.beat-icon-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--ring-cell);
+  border-radius: 9999px;
+  background: #fff;
+  color: var(--color-btn);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.beat-icon-danger {
+  color: var(--color-amber);
+}
+
+.beat-rename {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+}
+
+.beat-rename-input {
+  min-width: 0;
+  flex: 1;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ring-field);
+  border-radius: 10px;
+  background: var(--field-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-eyebrow);
+    box-shadow: 0 0 0 3px var(--ring-mute);
+  }
+}

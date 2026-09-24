@@ -1,0 +1,102 @@
+<!-- BEATS edge tab — visible only while the panel is closed -->
+<button
+  type="button"
+  class="lib-tab fixed right-0 top-1/2 z-[45] flex -translate-y-1/2 cursor-pointer flex-col items-center gap-2 px-[9px] py-4"
+  [class.lib-tab-hidden]="panel.panelOpen()"
+  aria-label="Open library"
+  (click)="panel.openPanel()"
+>
+  <span class="lib-tab-label font-mono text-[10px] font-bold tracking-[0.15em] text-white">
+    BEATS
+  </span>
+</button>
+
+<!-- Slide-out panel -->
+<aside
+  class="lib-panel fixed inset-y-0 right-0 z-50 w-[330px] overflow-y-auto px-[22px] py-[26px]"
+  [class.lib-panel-open]="panel.panelOpen()"
+>
+  <div class="mb-[18px] flex items-center justify-between">
+    <div>
+      <p class="font-mono text-[11px] font-bold tracking-[0.2em] text-eyebrow">BEATS</p>
+      <h2 class="mt-[2px] text-[22px] font-semibold tracking-[-0.01em] text-ink">Library</h2>
+    </div>
+    <button
+      type="button"
+      class="panel-close h-8 w-8 shrink-0 cursor-pointer rounded-full bg-white text-base leading-none text-btn"
+      aria-label="Close library"
+      (click)="panel.closePanel()"
+    >
+      ✕
+    </button>
+  </div>
+
+  @if (!isSignedIn()) {
+    <p class="lib-note">Your saved beats live with your account.</p>
+    <button type="button" class="lib-action" (click)="signIn()">Sign in</button>
+  } @else if (pendingLoad(); as beat) {
+    <div class="lib-confirm">
+      <p class="lib-confirm-text">
+        The grid has unsaved changes. Loading <strong>{{ beat.title }}</strong> will discard them.
+      </p>
+      <div class="lib-confirm-actions">
+        <button type="button" class="lib-action" (click)="confirmLoad()">Load anyway</button>
+        <button type="button" class="lib-action lib-action-quiet" (click)="cancelLoad()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  } @else if (pendingDelete(); as beat) {
+    <div class="lib-confirm">
+      <p class="lib-confirm-text">
+        Delete <strong>{{ beat.title }}</strong> for good? This cannot be undone.
+      </p>
+      <div class="lib-confirm-actions">
+        <button type="button" class="lib-action lib-action-danger" (click)="confirmDelete()">
+          Delete
+        </button>
+        <button type="button" class="lib-action lib-action-quiet" (click)="cancelDelete()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (isSignedIn() && !pendingLoad() && !pendingDelete()) {
+    @if (listError(); as error) {
+      <p class="lib-note lib-note-error">{{ error }}</p>
+    }
+
+    @if (list().length === 0 && !isLoading()) {
+      <p class="lib-note">
+        Nothing saved yet. Build a pattern and hit Save — it will show up here.
+      </p>
+    }
+
+    <div class="flex flex-col gap-2">
+      @for (beat of list(); track beat.id) {
+        <app-beat-row
+          [beat]="beat"
+          [active]="currentBeat()?.id === beat.id"
+          (loadBeat)="onLoad(beat)"
+          (rename)="onRename(beat, $event)"
+          (remove)="onRemove(beat)"
+        />
+      }
+    </div>
+
+    @if (isLoading()) {
+      <p class="lib-note">Loading…</p>
+    }
+
+    @if (hasNext()) {
+      <button type="button" class="lib-action lib-action-more" (click)="loadMore()">
+        Load more
+      </button>
+    }
+
+    @if (total(); as count) {
+      <p class="lib-count font-mono">{{ count }} saved</p>
+    }
+  }
+</aside>

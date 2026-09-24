@@ -34,6 +34,7 @@ export class BeatsStore {
   private readonly _beats = signal<readonly Beat[]>([]);
   private readonly _total = signal<number | null>(null);
   private readonly _hasNext = signal(false);
+  private readonly _page = signal(1);
   private readonly _listStatus = signal<ListStatus>('idle');
   private readonly _listError = signal<string | null>(null);
 
@@ -112,17 +113,35 @@ export class BeatsStore {
     }
   }
 
-  /** Fetch the library's first page. */
-  async refresh(): Promise<void> {
+  /** Fetch the library's first page, replacing whatever is held. */
+  refresh(): Promise<void> {
+    return this.fetchPage(1, 'replace');
+  }
+
+  /**
+   * Append the next page. Offset pagination can shift rows when the underlying
+   * data changes between requests, so a beat saved meanwhile could in principle
+   * repeat — the id guard below keeps it out rather than rendering it twice.
+   */
+  loadMore(): Promise<void> {
+    if (!this._hasNext() || this.isListLoading()) return Promise.resolve();
+
+    return this.fetchPage(this._page() + 1, 'append');
+  }
+
+  private async fetchPage(page: number, mode: 'replace' | 'append'): Promise<void> {
     this._listStatus.set('loading');
     this._listError.set(null);
 
     try {
-      const page = await firstValueFrom(this.api.listBeats());
+      const result = await firstValueFrom(this.api.listBeats(page));
 
-      this._beats.set(page.items);
-      this._total.set(page.meta.total);
-      this._hasNext.set(page.meta.hasNext);
+      this._beats.update((held) =>
+        mode === 'replace' ? result.items : dedupeById([...held, ...result.items]),
+      );
+      this._page.set(result.meta.page);
+      this._total.set(result.meta.total);
+      this._hasNext.set(result.meta.hasNext);
       this._listStatus.set('idle');
     } catch (error) {
       this._listError.set(messageFor(error));
@@ -214,6 +233,12 @@ export class BeatsStore {
   private rebaseline(): void {
     this._baseline.set(JSON.stringify(this.currentState()));
   }
+}
+
+function dedupeById(beats: readonly Beat[]): Beat[] {
+  const seen = new Map(beats.map((beat) => [beat.id, beat]));
+
+  return [...seen.values()];
 }
 
 function messageFor(error: unknown): string {
