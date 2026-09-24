@@ -29,11 +29,7 @@ export class SequencerPage {
   protected readonly kitPanel = inject(KitPanelStore);
   private readonly engine = inject(AudioEngine);
   private readonly storage = inject(StorageService);
-  private readonly beats = inject(BeatsStore);
-
-  /** Which beat is being edited, and whether the grid has moved on since. */
-  protected readonly currentBeat = this.beats.currentBeat;
-  protected readonly isDirty = this.beats.isDirty;
+  protected readonly beats = inject(BeatsStore);
 
   /** Header meta: "{kit name | Custom kit} · 8 · 16". */
   protected readonly kitLabel = computed(() => {

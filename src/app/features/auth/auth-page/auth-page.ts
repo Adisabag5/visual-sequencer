@@ -20,15 +20,13 @@ type Mode = 'sign-in' | 'sign-up';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthPage {
-  private readonly auth = inject(AuthStore);
+  protected readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
 
   private readonly _mode = signal<Mode>('sign-in');
 
   readonly mode = this._mode.asReadonly();
-  readonly busy = this.auth.busy;
-  readonly error = this.auth.error;
 
   readonly isSignUp = computed(() => this._mode() === 'sign-up');
   readonly heading = computed(() => (this.isSignUp() ? 'Create your account' : 'Welcome back'));
@@ -78,7 +76,7 @@ export class AuthPage {
   }
 
   async submit(): Promise<void> {
-    if (this.form.invalid || this.busy()) {
+    if (this.form.invalid || this.auth.busy()) {
       this.form.markAllAsTouched();
 
       return;

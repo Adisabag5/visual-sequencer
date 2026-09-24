@@ -21,11 +21,11 @@
 
 <!-- Tracks -->
 <div class="flex flex-col gap-[14px]">
-  @for (track of tracks(); track $index) {
+  @for (track of pattern.tracks(); track $index) {
     <app-track-row
       [track]="track"
-      [currentStep]="currentStep()"
-      [playing]="isPlaying()"
+      [currentStep]="transport.currentStep()"
+      [playing]="transport.isPlaying()"
       [anySoloed]="anySoloed()"
       (stepToggle)="stepToggle.emit({ trackIndex: $index, stepIndex: $event })"
       (muteToggle)="muteToggle.emit($index)"
