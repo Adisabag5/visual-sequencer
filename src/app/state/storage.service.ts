@@ -65,10 +65,20 @@ export class StorageService {
     return null;
   }
 
+  /**
+   * The same versioned blob `save()` writes to localStorage, returned instead of
+   * stored. The server keeps a beat's pattern as this exact shape and treats it
+   * opaquely, so the mapping must not be duplicated anywhere else — this service
+   * owns the schema and its migrations.
+   */
+  toSavedState(snapshot: PersistedSnapshot): SavedState {
+    return buildSavedState(snapshot);
+  }
+
   /** Debounced write. Callers pass domain values; the schema stays in here. */
   save(snapshot: PersistedSnapshot): void {
     if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.writeNow(toSavedState(snapshot)), DEBOUNCE_MS);
+    this.timer = setTimeout(() => this.writeNow(buildSavedState(snapshot)), DEBOUNCE_MS);
   }
 
   private writeNow(state: SavedState): void {
@@ -81,7 +91,7 @@ export class StorageService {
 }
 
 /** Domain snapshot → the version-2 wire shape. */
-function toSavedState(s: PersistedSnapshot): SavedState {
+function buildSavedState(s: PersistedSnapshot): SavedState {
   return {
     version: 2,
     bpm: s.bpm,

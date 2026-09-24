@@ -2,7 +2,14 @@ import { HttpClient, HttpContext, HttpContextToken } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { catchError, finalize, Observable, shareReplay, throwError } from 'rxjs';
 import { API_BASE_URL } from './api.config';
-import { AuthResponse, Credentials } from './api.types';
+import {
+  AuthResponse,
+  Beat,
+  CreateBeatBody,
+  Credentials,
+  Paginated,
+  UpdateBeatBody,
+} from './api.types';
 import { toApiError } from './api.errors';
 
 /**
@@ -84,6 +91,28 @@ export class ApiClient {
         {},
         { withCredentials: true, context: skipAuth() },
       )
+      .pipe(asApiError());
+  }
+
+  createBeat(body: CreateBeatBody): Observable<Beat> {
+    return this.http
+      .post<Beat>(`${this.baseUrl}/beats`, body, { withCredentials: true })
+      .pipe(asApiError());
+  }
+
+  updateBeat(id: string, body: UpdateBeatBody): Observable<Beat> {
+    return this.http
+      .patch<Beat>(`${this.baseUrl}/beats/${id}`, body, { withCredentials: true })
+      .pipe(asApiError());
+  }
+
+  /**
+   * The server answers `{items, meta}`, never a bare array, and defaults to
+   * page 1 / limit 20. Callers that only want the count read `meta.total`.
+   */
+  listBeats(): Observable<Paginated<Beat>> {
+    return this.http
+      .get<Paginated<Beat>>(`${this.baseUrl}/beats`, { withCredentials: true })
       .pipe(asApiError());
   }
 }
