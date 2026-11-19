@@ -1,4 +1,4 @@
-/** Wire shapes returned by nest-server. Dates arrive as ISO strings, not Date. */
+/** Wire shapes returned by sequencer-server. Dates arrive as ISO strings, not Date. */
 
 export type Role = 'ADMIN' | 'USER';
 

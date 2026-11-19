@@ -37,7 +37,7 @@ first, then write the code.
 ## Accounts & library (v3)
 
 Added 2026-08-22, when Pulse gained a backend. These are the only terms for the
-account side; the server (`~/DEV/nest-server`) uses the same names for its entities.
+account side; the server (`sequencer-server`) uses the same names for its entities.
 
 | Term | Definition | Avoid calling it |
 | --- | --- | --- |

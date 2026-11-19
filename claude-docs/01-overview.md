@@ -9,7 +9,7 @@
 Pulse is a **browser-based audiovisual step-sequencer drum machine**, an Angular web app
 designed so it can later be wrapped for mobile (PWA → Capacitor; notes inline in
 tech-stack/architecture). The instrument itself runs entirely on the client; since
-2026-08-22 a backend (`~/DEV/nest-server`) adds accounts, so a person can save named
+2026-08-22 a backend (`sequencer-server`) adds accounts, so a person can save named
 **beats** and reach them from any device. Playing and editing still work without an
 account.
 

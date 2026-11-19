@@ -12,7 +12,8 @@ Built-in samples, tempo/transport, per-track volume/mute/solo, per-step pitch
 still works offline and auto-saves to the browser. Designed to wrap to mobile later
 (PWA → Capacitor). Full spec in `claude-docs/01-overview.md`.
 
-**Accounts (added 2026-08-22).** Pulse now has a backend: `~/DEV/nest-server`, a NestJS +
+**Accounts (added 2026-08-22).** Pulse now has a backend: `sequencer-server` (checked out
+locally at `~/DEV/nest-server`), a NestJS +
 MySQL API providing sign up / sign in, profiles, collections and saved **beats**. This
 replaced the original "client-only, no backend" scope. The pattern still auto-saves
 locally; the server is what lets a person keep named beats across devices.
