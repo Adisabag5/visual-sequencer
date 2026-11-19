@@ -100,6 +100,15 @@ locally; the server is what lets a person keep named beats across devices.
 - **Playwright** e2e for the core flow: toggle steps → play → hear/inspect → clear
   → reload restores.
 - Lint with **angular-eslint**, format with **Prettier**. Code must pass both.
+- **Typecheck with `pnpm typecheck` (`tsc -b --noEmit`).** Plain `npx tsc --noEmit` silently
+  checks *nothing* in this repo: `tsconfig.json` is `files: []` plus project references, so
+  without `-b` it has no inputs and exits 0. `pnpm build` and `pnpm test` do compile, so
+  errors surface eventually — but the `-b` form is what catches them first.
+- **CI** (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`:
+  one job for lint, typecheck, unit tests and the production build, and a separate job for
+  Playwright so a formatting slip does not wait behind a browser download. Only chromium is
+  installed, because `playwright.config.ts` defines exactly one project. A failed e2e run
+  uploads its HTML report as an artifact.
 - TypeScript is **strict**. No `any` without a written reason.
 - Every new domain concept goes into the glossary **before** it gets code.
 
@@ -111,6 +120,7 @@ pnpm start        # dev server (Angular CLI)
 pnpm test         # unit tests (Vitest)
 pnpm e2e          # Playwright
 pnpm lint         # angular-eslint
+pnpm typecheck    # tsc -b --noEmit (see below — plain `tsc --noEmit` checks nothing here)
 pnpm build        # production build
 ```
 
