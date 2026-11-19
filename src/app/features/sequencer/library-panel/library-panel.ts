@@ -20,18 +20,9 @@ import { BeatRow } from '../beat-row/beat-row';
 })
 export class LibraryPanel {
   protected readonly panel = inject(LibraryPanelStore);
-  private readonly beats = inject(BeatsStore);
-  private readonly auth = inject(AuthStore);
+  protected readonly beats = inject(BeatsStore);
+  protected readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
-
-  protected readonly isSignedIn = this.auth.isSignedIn;
-  protected readonly list = this.beats.beats;
-  protected readonly total = this.beats.total;
-  protected readonly hasNext = this.beats.hasNext;
-  protected readonly isLoading = this.beats.isListLoading;
-  protected readonly listError = this.beats.listError;
-  protected readonly currentBeat = this.beats.currentBeat;
-  protected readonly isDirty = this.beats.isDirty;
 
   /** The beat a confirmation is currently asking about, if any. */
   private readonly _pendingLoad = signal<Beat | null>(null);
@@ -59,7 +50,7 @@ export class LibraryPanel {
 
   /** Load straight away, or ask first when it would discard unsaved work. */
   protected onLoad(beat: Beat): void {
-    if (this.isDirty()) {
+    if (this.beats.isDirty()) {
       this._pendingLoad.set(beat);
 
       return;

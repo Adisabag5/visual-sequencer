@@ -61,7 +61,11 @@
     <!-- Presets view: the 3 kit cards -->
     <div class="flex flex-col gap-3">
       @for (kit of kits; track kit.id) {
-        <app-kit-card [kit]="kit" [active]="activeKit() === kit.id" (loadKit)="loadKit(kit.id)" />
+        <app-kit-card
+          [kit]="kit"
+          [active]="pattern.activeKit() === kit.id"
+          (loadKit)="loadKit(kit.id)"
+        />
       }
     </div>
   } @else {
@@ -70,7 +74,7 @@
       Assign any voice to each of the 8 tracks. Your grid pattern stays — only the sound changes.
     </p>
     <div class="flex flex-col gap-2">
-      @for (track of tracks(); track $index) {
+      @for (track of pattern.tracks(); track $index) {
         <app-voice-picker
           [track]="track"
           [trackNumber]="$index + 1"

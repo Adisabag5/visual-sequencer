@@ -6,8 +6,8 @@
   Visualizer
 </span>
 <div class="absolute right-[26px] top-4 flex items-center gap-2">
-  <span class="status-dot h-2 w-2 rounded-full" [class.live]="isPlaying()"></span>
+  <span class="status-dot h-2 w-2 rounded-full" [class.live]="transport.isPlaying()"></span>
   <span class="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-mono">
-    {{ isPlaying() ? 'Live' : 'Idle' }}
+    {{ transport.isPlaying() ? 'Live' : 'Idle' }}
   </span>
 </div>

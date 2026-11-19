@@ -31,7 +31,7 @@
     </button>
   </div>
 
-  @if (!isSignedIn()) {
+  @if (!auth.isSignedIn()) {
     <p class="lib-note">Your saved beats live with your account.</p>
     <button type="button" class="lib-action" (click)="signIn()">Sign in</button>
   } @else if (pendingLoad(); as beat) {
@@ -62,22 +62,22 @@
     </div>
   }
 
-  @if (isSignedIn() && !pendingLoad() && !pendingDelete()) {
-    @if (listError(); as error) {
+  @if (auth.isSignedIn() && !pendingLoad() && !pendingDelete()) {
+    @if (beats.listError(); as error) {
       <p class="lib-note lib-note-error">{{ error }}</p>
     }
 
-    @if (list().length === 0 && !isLoading()) {
+    @if (beats.beats().length === 0 && !beats.isListLoading()) {
       <p class="lib-note">
         Nothing saved yet. Build a pattern and hit Save — it will show up here.
       </p>
     }
 
     <div class="flex flex-col gap-2">
-      @for (beat of list(); track beat.id) {
+      @for (beat of beats.beats(); track beat.id) {
         <app-beat-row
           [beat]="beat"
-          [active]="currentBeat()?.id === beat.id"
+          [active]="beats.currentBeat()?.id === beat.id"
           (loadBeat)="onLoad(beat)"
           (rename)="onRename(beat, $event)"
           (remove)="onRemove(beat)"
@@ -85,17 +85,17 @@
       }
     </div>
 
-    @if (isLoading()) {
+    @if (beats.isListLoading()) {
       <p class="lib-note">Loading…</p>
     }
 
-    @if (hasNext()) {
+    @if (beats.hasNext()) {
       <button type="button" class="lib-action lib-action-more" (click)="loadMore()">
         Load more
       </button>
     }
 
-    @if (total(); as count) {
+    @if (beats.total(); as count) {
       <p class="lib-count font-mono">{{ count }} saved</p>
     }
   }

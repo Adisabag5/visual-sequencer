@@ -39,12 +39,12 @@
         </p>
       }
 
-      @if (error()) {
-        <p class="auth-error" role="alert">{{ error() }}</p>
+      @if (auth.error()) {
+        <p class="auth-error" role="alert">{{ auth.error() }}</p>
       }
 
-      <button class="auth-submit" type="submit" [disabled]="busy()">
-        {{ busy() ? 'Working…' : submitLabel() }}
+      <button class="auth-submit" type="submit" [disabled]="auth.busy()">
+        {{ auth.busy() ? 'Working…' : submitLabel() }}
       </button>
     </form>
 

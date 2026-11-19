@@ -15,10 +15,10 @@
         <p class="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-mono">
           {{ kitLabel() }}
         </p>
-        @if (currentBeat(); as beat) {
+        @if (beats.currentBeat(); as beat) {
           <p class="beat-label font-mono text-[10.5px] font-bold tracking-[0.16em]">
             {{ beat.title }}
-            @if (isDirty()) {
+            @if (beats.isDirty()) {
               <span class="beat-unsaved"> · unsaved</span>
             }
           </p>

@@ -24,8 +24,8 @@
     <button type="button" class="save-icon-btn" aria-label="Cancel" (click)="cancel()">✕</button>
   </span>
 } @else {
-  <button type="button" class="save-btn" [disabled]="isSaving()" (click)="press()">
-    @if (isSaving()) {
+  <button type="button" class="save-btn" [disabled]="beats.isSaving()" (click)="press()">
+    @if (beats.isSaving()) {
       Saving…
     } @else {
       Save
@@ -36,12 +36,12 @@
 @if (justSaved()) {
   <span class="save-note" role="status">
     Saved
-    @if (total() !== null) {
-      <span class="save-count"> · {{ total() }} beats</span>
+    @if (beats.total() !== null) {
+      <span class="save-count"> · {{ beats.total() }} beats</span>
     }
   </span>
 }
 
 @if (failed()) {
-  <span class="save-note save-note-error" role="alert">{{ error() }}</span>
+  <span class="save-note save-note-error" role="alert">{{ beats.error() }}</span>
 }

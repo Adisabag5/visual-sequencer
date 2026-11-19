@@ -15,7 +15,7 @@ import { AuthStore } from '../../../state/auth.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionButton {
-  private readonly auth = inject(AuthStore);
+  protected readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
 
   /**
@@ -25,7 +25,6 @@ export class SessionButton {
    */
   private readonly signingOut = signal(false);
 
-  readonly isSignedIn = this.auth.isSignedIn;
   readonly isBusy = this.signingOut.asReadonly();
 
   readonly label = computed(() => {
@@ -34,7 +33,7 @@ export class SessionButton {
     // flashes the wrong answer at someone who is, in fact, signed in.
     if (this.auth.isRestoring()) return 'Checking…';
 
-    return this.isSignedIn() ? 'Sign out' : 'Sign in';
+    return this.auth.isSignedIn() ? 'Sign out' : 'Sign in';
   });
 
   /** Unknown session, or a sign-out already running — either way, not clickable. */
@@ -43,7 +42,7 @@ export class SessionButton {
   async press(): Promise<void> {
     if (this.disabled()) return;
 
-    if (!this.isSignedIn()) {
+    if (!this.auth.isSignedIn()) {
       await this.router.navigate(['/auth']);
 
       return;

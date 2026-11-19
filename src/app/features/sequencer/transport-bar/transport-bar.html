@@ -1,5 +1,5 @@
 <app-ui-button variant="circle" ariaLabel="Play / Stop" (press)="togglePlay.emit()">
-  @if (isPlaying()) {
+  @if (transport.isPlaying()) {
     <span class="play-square"></span>
   } @else {
     <span class="play-triangle"></span>
@@ -21,7 +21,7 @@
 
 <div class="ml-auto flex items-center gap-3">
   <div class="text-right">
-    <div class="font-mono text-[28px] font-bold leading-none text-ink">{{ bpm() }}</div>
+    <div class="font-mono text-[28px] font-bold leading-none text-ink">{{ transport.bpm() }}</div>
     <div class="text-[9px] font-medium uppercase tracking-[0.2em] text-mono">BPM</div>
   </div>
   <div class="flex flex-col gap-[5px]">

@@ -16,13 +16,10 @@ import { TrackRow } from '../track-row/track-row';
   },
 })
 export class Grid {
-  private readonly pattern = inject(PatternStore);
-  private readonly transport = inject(TransportStore);
+  protected readonly pattern = inject(PatternStore);
+  protected readonly transport = inject(TransportStore);
 
-  readonly tracks = this.pattern.tracks;
-  readonly currentStep = this.transport.currentStep;
-  readonly isPlaying = this.transport.isPlaying;
-  readonly anySoloed = computed(() => this.tracks().some((t) => t.soloed));
+  readonly anySoloed = computed(() => this.pattern.tracks().some((t) => t.soloed));
 
   /** Emits which step of which track was toggled. */
   readonly stepToggle = output<{ trackIndex: number; stepIndex: number }>();
@@ -51,6 +48,6 @@ export class Grid {
 
   /** Ruler slot under the playhead while playing (lights amber). */
   protected isPlayheadCol(i: number): boolean {
-    return this.isPlaying() && i === this.currentStep();
+    return this.transport.isPlaying() && i === this.transport.currentStep();
   }
 }
