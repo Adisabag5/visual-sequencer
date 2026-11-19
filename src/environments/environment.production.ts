@@ -1,14 +1,15 @@
 export const environment = {
   production: true,
   /**
-   * Empty means same-origin: requests go to /auth/... on whatever host serves
-   * the app, which is right when the API is proxied under the same domain.
+   * Same-origin, under the server's /api prefix: the NestJS process serves both
+   * this app and the API from one domain, so a relative base is all that is
+   * needed and no CORS is involved.
    *
-   * If the API lives elsewhere (a separate host from a Vercel frontend), set the
-   * full origin here — e.g. 'https://api.pulse.example.com' — and add that origin
-   * to CORS_ORIGIN on the server. Leaving it empty fails visibly with 404s on
-   * your own domain; the previous hardcoded localhost failed invisibly by
-   * calling the visitor's own machine.
+   * The prefix is not optional — every server route is mounted under it, so an
+   * empty value here 404s every call. If the API is ever moved to its own host,
+   * put the full origin in front ('https://api.example.com/api') and add that
+   * origin to CORS_ORIGIN on the server, which also means restoring the
+   * refresh cookie's SameSite=None.
    */
-  apiBaseUrl: '',
+  apiBaseUrl: '/api',
 };
