@@ -1,10 +1,12 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { computed, signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { ApiClient } from '../api/api.client';
 import { Beat } from '../api/api.types';
 import { ApiError } from '../api/api.errors';
 import { BeatsStore } from './beats.store';
+import { AuthStore, SessionStatus } from './auth.store';
 import { PatternStore } from './pattern.store';
 import { TransportStore } from './transport.store';
 import { StorageService } from './storage.service';
@@ -38,18 +40,34 @@ function beat(overrides: Partial<Beat> = {}): Beat {
   };
 }
 
-function setup() {
-  installLocalStorageMock();
+function setup({ keepStorage = false } = {}) {
+  // A reload is a new store against the SAME localStorage. Reinstalling the
+  // mock would wipe exactly the thing under test.
+  if (!keepStorage) installLocalStorageMock();
 
   const api = {
     createBeat: vi.fn().mockReturnValue(of(beat())),
     updateBeat: vi.fn().mockReturnValue(of(beat({ title: 'Renamed' }))),
     deleteBeat: vi.fn().mockReturnValue(of(undefined)),
+    getBeat: vi.fn().mockReturnValue(of(beat())),
     listBeats: vi.fn().mockReturnValue(of(page([beat()]))),
   };
 
+  // Starts 'restoring', as it does on a real boot: the session is not known
+  // yet, and the store must not act on that as if it were a decision.
+  const status = signal<SessionStatus>('restoring');
+  const auth = {
+    status,
+    isSignedIn: computed(() => status() === 'signed-in'),
+  };
+
   TestBed.resetTestingModule();
-  TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: api }] });
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: ApiClient, useValue: api },
+      { provide: AuthStore, useValue: auth },
+    ],
+  });
 
   const store = TestBed.inject(BeatsStore);
   const pattern = TestBed.inject(PatternStore);
@@ -60,7 +78,7 @@ function setup() {
   const savedBlob = (bpm: number) =>
     storage.toSavedState({ bpm, activeKit: pattern.activeKit(), tracks: pattern.tracks() });
 
-  return { api, store, pattern, transport, savedBlob };
+  return { api, store, pattern, transport, storage, savedBlob, status };
 }
 
 describe('BeatsStore', () => {
@@ -153,6 +171,89 @@ describe('BeatsStore', () => {
       expect(h.pattern.tracks()).toBe(before);
       expect(h.store.currentBeat()).toBeNull();
       expect(h.store.error()).toContain('could not be read');
+    });
+  });
+
+  describe('surviving a reload', () => {
+    /** Effects do not run by themselves in a zoneless test; flush, then let
+     *  the fetch settle. */
+    const signIn = async (harness: ReturnType<typeof setup>) => {
+      harness.status.set('signed-in');
+      TestBed.flushEffects();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    it('re-attaches the beat the grid came from', async () => {
+      await h.store.save('Lo-fi');
+      expect(h.storage.recallBeat()).toBe('7');
+
+      // a reload: new store, same localStorage
+      const reloaded = setup({ keepStorage: true });
+      expect(reloaded.store.needsTitle()).toBe(true);
+
+      await signIn(reloaded);
+
+      // without this, the next save would POST a near-identical second beat
+      expect(reloaded.api.getBeat).toHaveBeenCalledWith('7');
+      expect(reloaded.store.currentBeat()?.id).toBe('7');
+      expect(reloaded.store.needsTitle()).toBe(false);
+    });
+
+    it('measures unsaved changes against what was saved, not what was restored', async () => {
+      await h.store.save('Lo-fi');
+      const savedData = h.api.createBeat.mock.calls[0][0].data;
+
+      const reloaded = setup({ keepStorage: true });
+      reloaded.api.getBeat.mockReturnValue(of(beat({ data: savedData })));
+      // the grid came back from localStorage already edited past that save
+      reloaded.pattern.toggleStep(0, 1);
+      await signIn(reloaded);
+
+      expect(reloaded.store.isDirty()).toBe(true);
+    });
+
+    it("lets go when the beat is gone or is somebody else's", async () => {
+      await h.store.save('Lo-fi');
+
+      const reloaded = setup({ keepStorage: true });
+      reloaded.api.getBeat.mockReturnValue(throwError(() => ({ kind: 'unknown' }) as ApiError));
+      await signIn(reloaded);
+
+      // a stale pointer would make the next save patch a row that is not ours
+      expect(reloaded.store.currentBeat()).toBeNull();
+      expect(reloaded.storage.recallBeat()).toBeNull();
+      expect(reloaded.store.needsTitle()).toBe(true);
+    });
+
+    it('does not act while the session is still unknown', async () => {
+      await h.store.save('Lo-fi');
+
+      const booting = setup({ keepStorage: true });
+      TestBed.flushEffects();
+      await Promise.resolve();
+
+      // 'restoring' is not 'signed-out'; treating it as either would be a guess
+      expect(booting.api.getBeat).not.toHaveBeenCalled();
+      expect(booting.storage.recallBeat()).toBe('7');
+    });
+  });
+
+  describe('signing out', () => {
+    it('lets go of the current beat', async () => {
+      h.status.set('signed-in');
+      TestBed.flushEffects();
+      await h.store.save('Lo-fi');
+      expect(h.store.currentBeat()).not.toBeNull();
+
+      h.status.set('signed-out');
+      TestBed.flushEffects();
+      await Promise.resolve();
+
+      // otherwise the header keeps showing a beat nobody is signed in to, and
+      // a save after signing in as someone else patches the first account's
+      expect(h.store.currentBeat()).toBeNull();
+      expect(h.storage.recallBeat()).toBeNull();
     });
   });
 

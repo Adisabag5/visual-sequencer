@@ -33,6 +33,13 @@ export interface SavedState {
 const KEY = 'pulse.state';
 /** Pre-kit schema key. Read-only for migration; never written or deleted. */
 const LEGACY_KEY = 'pulse.state.v1';
+/**
+ * Which saved beat the grid came from. Deliberately its own key rather than a
+ * field on SavedState: that blob is what the server stores as a beat's `data`,
+ * and putting a beat's own id inside it would be circular — and wrong the
+ * moment the blob is loaded into a different beat.
+ */
+const BEAT_KEY = 'pulse.currentBeat';
 const DEBOUNCE_MS = 300;
 
 /** The fixed voice each v1 track index played, for v1 → v2 migration. */
@@ -84,6 +91,24 @@ export class StorageService {
    */
   toSavedState(snapshot: PersistedSnapshot): SavedState {
     return buildSavedState(snapshot);
+  }
+
+  /**
+   * Remember (or forget) which beat the grid came from, so a reload does not
+   * orphan it. Only the id is kept: the beat itself is re-fetched, which also
+   * re-checks that it still exists and still belongs to whoever is signed in.
+   */
+  rememberBeat(id: string | null): void {
+    try {
+      if (id === null) localStorage.removeItem(BEAT_KEY);
+      else localStorage.setItem(BEAT_KEY, id);
+    } catch {
+      // ignore quota / unavailable storage, same as writeNow
+    }
+  }
+
+  recallBeat(): string | null {
+    return readRaw(BEAT_KEY);
   }
 
   /** Debounced write. Callers pass domain values; the schema stays in here. */

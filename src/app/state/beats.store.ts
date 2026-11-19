@@ -1,8 +1,9 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../api/api.client';
 import { ApiError } from '../api/api.errors';
 import { Beat, BeatData } from '../api/api.types';
+import { AuthStore } from './auth.store';
 import { PatternStore } from './pattern.store';
 import { SavedState, StorageService } from './storage.service';
 import { TransportStore } from './transport.store';
@@ -27,6 +28,7 @@ export class BeatsStore {
   private readonly storage = inject(StorageService);
   private readonly pattern = inject(PatternStore);
   private readonly transport = inject(TransportStore);
+  private readonly auth = inject(AuthStore);
 
   private readonly _currentBeat = signal<Beat | null>(null);
   private readonly _status = signal<SaveStatus>('idle');
@@ -80,6 +82,42 @@ export class BeatsStore {
     // A fresh page is not "unsaved changes" — whatever is on the grid at boot
     // is the starting point to measure against.
     this.rebaseline();
+
+    // The current beat belongs to the session, so its lifetime follows the
+    // session rather than the page. Signing in re-attaches the beat the grid
+    // came from; signing out lets go of it, which otherwise left a stale title
+    // in the header and, after signing in as someone else, a save that patched
+    // the previous account's beat into a 403.
+    effect(() => {
+      if (this.auth.isSignedIn()) void this.reattach();
+      else if (this.auth.status() === 'signed-out') this.reset();
+    });
+  }
+
+  /**
+   * Re-attach the beat the grid came from after a reload. Only the id survived,
+   * so the beat is fetched back — which doubles as the check that it still
+   * exists and is still ours. Anything else and we quietly let go: a stale
+   * pointer would make the next save patch a row that is gone or somebody
+   * else's.
+   */
+  private async reattach(): Promise<void> {
+    const id = this.storage.recallBeat();
+    if (id === null || this._currentBeat() !== null) return;
+
+    try {
+      const beat = await firstValueFrom(this.api.getBeat(id));
+
+      this._currentBeat.set(beat);
+
+      // Baseline against what was SAVED, not against the grid. The grid was
+      // restored from localStorage and may have moved on since the last save —
+      // in which case "unsaved changes" is exactly what it should say.
+      const saved = this.storage.parse(beat.data);
+      this._baseline.set(JSON.stringify(saved ?? this.currentState()));
+    } catch {
+      this.storage.rememberBeat(null);
+    }
   }
 
   /**
@@ -216,6 +254,7 @@ export class BeatsStore {
     this._currentBeat.set(null);
     this._status.set('idle');
     this._error.set(null);
+    this.storage.rememberBeat(null);
     this.rebaseline();
   }
 
@@ -226,6 +265,7 @@ export class BeatsStore {
 
   private adopt(beat: Beat): void {
     this._currentBeat.set(beat);
+    this.storage.rememberBeat(beat.id);
     this.rebaseline();
   }
 

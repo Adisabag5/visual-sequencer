@@ -106,6 +106,13 @@ export class ApiClient {
       .pipe(asApiError());
   }
 
+  /** 404 if it is gone, 403 if it belongs to somebody else. */
+  getBeat(id: string): Observable<Beat> {
+    return this.http
+      .get<Beat>(`${this.baseUrl}/beats/${id}`, { withCredentials: true })
+      .pipe(asApiError());
+  }
+
   /** 204 on success; the body is empty, so nothing comes back. */
   deleteBeat(id: string): Observable<void> {
     return this.http
