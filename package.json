@@ -9,7 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "playwright test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck": "tsc -b --noEmit"
   },
   "private": true,
   "packageManager": "pnpm@11.9.0",

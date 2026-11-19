@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # The prepare script installs git hooks, which a runner has no use for and
+  # which would fail on a shallow or hook-less checkout.
+  HUSKY: 0
+
+jobs:
+  # Fast feedback: lint, types and the unit suite all finish in well under a
+  # minute. Kept separate from e2e so a formatting slip does not wait behind a
+  # browser download.
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Only chromium: playwright.config.ts defines exactly one project, so
+      # pulling firefox and webkit would be minutes spent on nothing.
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # playwright.config.ts starts the dev server itself. reuseExistingServer
+      # is false when CI is set, so the run always gets a fresh one.
+      - run: pnpm e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
