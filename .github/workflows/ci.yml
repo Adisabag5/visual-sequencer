@@ -85,38 +85,46 @@ jobs:
           --health-retries=12
 
     steps:
+      # Both repos as siblings, neither inside the other. pnpm walks up from a
+      # nested directory, finds the outer project and decides there is nothing
+      # to install — it reports "Already up to date", creates no node_modules
+      # and even runs the OUTER project's prepare script. The server then has
+      # no CLI and cannot build.
       - uses: actions/checkout@v4
+        with:
+          path: app
 
       # Public repo, so the default token is enough — no PAT needed.
       - uses: actions/checkout@v4
         with:
           repository: Adisabag5/sequencer-server
-          path: sequencer-server
+          path: server
 
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version-file: app/.nvmrc
           cache: pnpm
+          cache-dependency-path: app/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+        working-directory: app
 
-      # --dir, not working-directory: the first attempt used the latter and the
-      # step quietly ran in the frontend instead ("Already up to date"), so the
-      # server was never installed and `nest` was not on PATH at serve time.
-      - run: pnpm --dir sequencer-server install --frozen-lockfile
-      - run: pnpm --dir sequencer-server build
+      - run: pnpm install --frozen-lockfile
+        working-directory: server
+      - run: pnpm build
+        working-directory: server
 
-      # Fail here with a clear reason rather than inside Playwright's
+      # Fail here with a readable reason rather than inside Playwright's
       # "webServer was not able to start".
       - name: Check the server actually built
-        run: test -f sequencer-server/dist/main.js
+        run: test -f server/dist/main.js
 
       # validateEnv fails the boot on a missing key, so every one it wants has
       # to be here. These are throwaway values for a throwaway database in a
       # throwaway container — not secrets, and deliberately named so.
       - name: Give the server an env to boot with
-        working-directory: sequencer-server
+        working-directory: server
         run: |
           cat > .env <<'ENV'
           NODE_ENV=test
@@ -135,12 +143,14 @@ jobs:
           ENV
 
       - run: pnpm exec playwright install --with-deps chromium
+        working-directory: app
 
       # Playwright starts both servers; NODE_ENV=test means the server builds
       # its own schema, so there is no migration step to keep in sync here.
       - run: pnpm e2e:api
+        working-directory: app
         env:
-          PULSE_API_DIR: sequencer-server
+          PULSE_API_DIR: ../server
           # the compiled output, so serving needs no CLI on PATH
           PULSE_API_CMD: node dist/main
 
@@ -148,12 +158,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-api
-          path: playwright-report/
-          retention-days: 7
-
-      - if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
+          path: app/playwright-report/
           retention-days: 7
