@@ -113,8 +113,17 @@ locally; the server is what lets a person keep named beats across devices.
 
 - **Vitest** unit tests for stores, the engine wrapper, and pitch/util logic.
   The scheduler/timing and pitch math especially must have tests.
-- **Playwright** e2e for the core flow: toggle steps → play → hear/inspect → clear
-  → reload restores.
+- **Playwright** e2e in two projects. `pnpm e2e:app` is the instrument on its own —
+  toggle steps → play → inspect → clear → reload restores — with no server and no
+  database, so it stays fast. `pnpm e2e:api` drives the browser against a real server and
+  a throwaway MySQL: signing up and out, the session surviving a reload, saving, the beat
+  re-attaching after a reload, and the whole Library. `pnpm e2e` runs both.
+  Each API test presents its own `X-Forwarded-For`, because sign-in is rate limited to
+  10/min per IP and a shared one makes the eleventh test fail at signup — which reads like
+  an auth bug rather than a budget. The server trusts the header because the run sets
+  `TRUST_PROXY=1`, the same mechanism nginx uses in production, so there is no test-only
+  branch in the server. `PULSE_API_DIR` says where the server checkout is (default
+  `../nest-server`, since the folder kept that name).
 - Lint with **angular-eslint**, format with **Prettier**. Code must pass both.
 - **Typecheck with `pnpm typecheck` (`tsc -b --noEmit`).** Plain `npx tsc --noEmit` silently
   checks *nothing* in this repo: `tsconfig.json` is `files: []` plus project references, so

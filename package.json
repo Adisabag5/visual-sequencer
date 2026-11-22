@@ -10,7 +10,9 @@
     "lint": "ng lint",
     "e2e": "playwright test",
     "prepare": "husky",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "e2e:app": "PULSE_SKIP_API=1 playwright test --project=app",
+    "e2e:api": "playwright test --project=api"
   },
   "private": true,
   "packageManager": "pnpm@11.9.0",
