@@ -23,7 +23,9 @@ const angular = {
  * see e2e/api/fixtures.ts for why that matters.
  */
 const api = {
-  command: 'pnpm start',
+  // Locally the Nest CLI is right there; CI builds first and runs the compiled
+  // output, so serving needs nothing on PATH beyond node.
+  command: process.env.PULSE_API_CMD ?? 'pnpm start',
   cwd: API_DIR,
   url: 'http://localhost:3000/api/health',
   reuseExistingServer: !process.env.CI,

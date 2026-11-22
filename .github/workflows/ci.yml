@@ -100,8 +100,17 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm install --frozen-lockfile
-        working-directory: sequencer-server
+
+      # --dir, not working-directory: the first attempt used the latter and the
+      # step quietly ran in the frontend instead ("Already up to date"), so the
+      # server was never installed and `nest` was not on PATH at serve time.
+      - run: pnpm --dir sequencer-server install --frozen-lockfile
+      - run: pnpm --dir sequencer-server build
+
+      # Fail here with a clear reason rather than inside Playwright's
+      # "webServer was not able to start".
+      - name: Check the server actually built
+        run: test -f sequencer-server/dist/main.js
 
       # validateEnv fails the boot on a missing key, so every one it wants has
       # to be here. These are throwaway values for a throwaway database in a
@@ -132,6 +141,8 @@ jobs:
       - run: pnpm e2e:api
         env:
           PULSE_API_DIR: sequencer-server
+          # the compiled output, so serving needs no CLI on PATH
+          PULSE_API_CMD: node dist/main
 
       - if: failure()
         uses: actions/upload-artifact@v4
