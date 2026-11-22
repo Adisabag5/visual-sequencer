@@ -39,6 +39,12 @@ export class SequencerPage {
   });
 
   constructor() {
+    // Re-attach the beat the grid came from, once the boot refresh has said
+    // whether anyone is signed in. Here rather than in the store's constructor
+    // because this is the page that displays it, and it is rebuilt on every
+    // navigation to '/' — including the one straight after signing in.
+    void this.beats.syncWithSession();
+
     // Keep the engine's scheduler snapshot in sync with the pattern.
     effect(() => this.engine.loadPattern(this.pattern.tracks()));
     // Mirror the engine's playhead into the transport store (drives the UI).

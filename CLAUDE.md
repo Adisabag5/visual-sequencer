@@ -43,6 +43,15 @@ locally; the server is what lets a person keep named beats across devices.
 - **Standalone components only** — no NgModules.
 - **Signals for all reactive state** — `signal`, `computed`, `effect`. No
   RxJS `BehaviorSubject` for app state.
+- **Do not set state from an `effect`** (decided 2026-11-22). If one signal can be
+  worked out from others, make it a `computed`; if something must happen when a person
+  does something, call it from the thing they did. An effect that writes hides *when*
+  the write happens and turns the order of two reactions into something you have to
+  reason about rather than read. `effect` is for pushing into the world outside signals
+  — the audio engine, `localStorage`, focus — not for keeping state in step.
+  Known exceptions, both predating the rule: `auth.store.ts` watches the token signal to
+  catch a session dropped by the interceptor, and `sequencer-page.ts` mirrors the
+  engine's playhead into `TransportStore`.
 - **Zoneless** — do not add `zone.js`; do not rely on Zone-based change detection.
 - **New control flow** in templates — `@if`, `@for`, `@switch`. Never `*ngIf`/`*ngFor`.
 - **OnPush** change detection on every component.

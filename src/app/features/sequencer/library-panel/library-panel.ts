@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Beat } from '../../../api/api.types';
 import { AuthStore } from '../../../state/auth.store';
@@ -31,13 +31,18 @@ export class LibraryPanel {
   protected readonly pendingLoad = this._pendingLoad.asReadonly();
   protected readonly pendingDelete = this._pendingDelete.asReadonly();
 
-  constructor() {
-    // The list is fetched when the panel opens rather than at boot: signed-out
-    // visitors never need it, and a beat saved on another device should show up
-    // when you go looking, not only after a reload.
-    effect(() => {
-      if (this.panel.panelOpen() && this.auth.isSignedIn()) void this.beats.refresh();
-    });
+  /**
+   * Open, and fetch the list while doing it. Fetching here rather than at boot
+   * means signed-out visitors never pay for it, and a beat saved on another
+   * device turns up when you go looking rather than only after a reload.
+   *
+   * Driven by the click rather than by an effect watching `panelOpen`: the
+   * fetch is something this action does, and saying so beats leaving a reader
+   * to infer it from a reaction somewhere else in the file.
+   */
+  protected open(): void {
+    this.panel.openPanel();
+    if (this.auth.isSignedIn()) void this.beats.refresh();
   }
 
   protected signIn(): void {

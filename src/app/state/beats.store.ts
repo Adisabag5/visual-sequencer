@@ -1,4 +1,4 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../api/api.client';
 import { ApiError } from '../api/api.errors';
@@ -47,7 +47,13 @@ export class BeatsStore {
    */
   private readonly _baseline = signal<string | null>(null);
 
-  readonly currentBeat = this._currentBeat.asReadonly();
+  /**
+   * The beat the grid is attached to — only while there is a session to attach
+   * it to. Derived rather than cleared on sign-out: nothing has to notice the
+   * session ending and write in response, so the header cannot be left showing
+   * a beat nobody is signed in to.
+   */
+  readonly currentBeat = computed(() => (this.auth.isSignedIn() ? this._currentBeat() : null));
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly beats = this._beats.asReadonly();
@@ -60,7 +66,7 @@ export class BeatsStore {
   readonly isListLoading = computed(() => this._listStatus() === 'loading');
 
   /** A title is only asked for once — the first save of a fresh pattern. */
-  readonly needsTitle = computed(() => this._currentBeat() === null);
+  readonly needsTitle = computed(() => this.currentBeat() === null);
 
   /** The grid right now, in the shape the server stores. */
   private readonly currentState = computed(() =>
@@ -82,28 +88,29 @@ export class BeatsStore {
     // A fresh page is not "unsaved changes" — whatever is on the grid at boot
     // is the starting point to measure against.
     this.rebaseline();
-
-    // The current beat belongs to the session, so its lifetime follows the
-    // session rather than the page. Signing in re-attaches the beat the grid
-    // came from; signing out lets go of it, which otherwise left a stale title
-    // in the header and, after signing in as someone else, a save that patched
-    // the previous account's beat into a 403.
-    effect(() => {
-      if (this.auth.isSignedIn()) void this.reattach();
-      else if (this.auth.status() === 'signed-out') this.reset();
-    });
   }
 
   /**
-   * Re-attach the beat the grid came from after a reload. Only the id survived,
-   * so the beat is fetched back — which doubles as the check that it still
-   * exists and is still ours. Anything else and we quietly let go: a stale
-   * pointer would make the next save patch a row that is gone or somebody
-   * else's.
+   * Re-attach the beat the grid came from, once the session is known. Called by
+   * the page that displays it rather than driven by an effect watching the
+   * session: an effect here would write state in response to a signal, which
+   * hides *when* the write happens and makes the order of two stores' reactions
+   * something you have to reason about instead of read.
+   *
+   * `restore()` is memoised, so awaiting it is both the wait for "is anyone
+   * signed in" and the answer. Safe to call again — it returns early once a
+   * beat is attached.
+   *
+   * Only the id survived the reload, so the beat is fetched back, which doubles
+   * as the check that it still exists and is still ours. Anything else and we
+   * quietly let go: a stale pointer would make the next save patch a row that
+   * is gone or somebody else's.
    */
-  private async reattach(): Promise<void> {
+  async syncWithSession(): Promise<void> {
+    await this.auth.restore();
+
     const id = this.storage.recallBeat();
-    if (id === null || this._currentBeat() !== null) return;
+    if (!this.auth.isSignedIn() || id === null || this._currentBeat() !== null) return;
 
     try {
       const beat = await firstValueFrom(this.api.getBeat(id));
@@ -127,7 +134,8 @@ export class BeatsStore {
    */
   async save(title?: string): Promise<boolean> {
     const data: BeatData = this.currentState();
-    const existing = this._currentBeat();
+    // the gated one: signed out there is nothing to patch, so a save creates
+    const existing = this.currentBeat();
 
     this._status.set('saving');
     this._error.set(null);
