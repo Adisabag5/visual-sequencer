@@ -100,7 +100,12 @@ jobs:
           repository: Adisabag5/sequencer-server
           path: server
 
+      # Both repos now live in subdirectories, so there is no package.json at
+      # the repository root for action-setup to read `packageManager` from.
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: app/package.json
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: app/.nvmrc
