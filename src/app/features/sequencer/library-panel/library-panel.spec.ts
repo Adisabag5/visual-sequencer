@@ -89,20 +89,30 @@ describe('LibraryPanel', () => {
   });
 
   describe('opening', () => {
-    it('fetches the list when the panel opens', async () => {
-      const h = setup({ open: true });
+    it('fetches the list when the tab is clicked', async () => {
+      const h = setup({ open: false });
+      await h.fixture.whenStable();
+      expect(h.beats.refresh).not.toHaveBeenCalled();
+
+      (h.host.querySelector('.lib-tab') as HTMLButtonElement).click();
       await h.fixture.whenStable();
 
       // fetched on open, not at boot: a beat saved on another device should
       // appear when you go looking, not only after a reload
-      expect(h.beats.refresh).toHaveBeenCalled();
+      expect(h.beats.refresh).toHaveBeenCalledOnce();
+      expect(h.host.querySelector('.lib-panel-open')).not.toBeNull();
     });
 
-    it('does not fetch while the panel is closed', async () => {
-      const h = setup({ open: false });
+    it('does not fetch for someone who is signed out', async () => {
+      const h = setup({ open: false, signedIn: false });
       await h.fixture.whenStable();
 
+      (h.host.querySelector('.lib-tab') as HTMLButtonElement).click();
+      await h.fixture.whenStable();
+
+      // the panel still opens — it just has the sign-in prompt to show
       expect(h.beats.refresh).not.toHaveBeenCalled();
+      expect(h.host.querySelector('.lib-panel-open')).not.toBeNull();
     });
 
     it('lists the saved beats', async () => {

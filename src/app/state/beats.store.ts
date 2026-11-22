@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../api/api.client';
 import { ApiError } from '../api/api.errors';
 import { Beat, BeatData } from '../api/api.types';
+import { AuthStore } from './auth.store';
 import { PatternStore } from './pattern.store';
 import { SavedState, StorageService } from './storage.service';
 import { TransportStore } from './transport.store';
@@ -27,6 +28,7 @@ export class BeatsStore {
   private readonly storage = inject(StorageService);
   private readonly pattern = inject(PatternStore);
   private readonly transport = inject(TransportStore);
+  private readonly auth = inject(AuthStore);
 
   private readonly _currentBeat = signal<Beat | null>(null);
   private readonly _status = signal<SaveStatus>('idle');
@@ -45,7 +47,13 @@ export class BeatsStore {
    */
   private readonly _baseline = signal<string | null>(null);
 
-  readonly currentBeat = this._currentBeat.asReadonly();
+  /**
+   * The beat the grid is attached to — only while there is a session to attach
+   * it to. Derived rather than cleared on sign-out: nothing has to notice the
+   * session ending and write in response, so the header cannot be left showing
+   * a beat nobody is signed in to.
+   */
+  readonly currentBeat = computed(() => (this.auth.isSignedIn() ? this._currentBeat() : null));
   readonly status = this._status.asReadonly();
   readonly error = this._error.asReadonly();
   readonly beats = this._beats.asReadonly();
@@ -58,7 +66,7 @@ export class BeatsStore {
   readonly isListLoading = computed(() => this._listStatus() === 'loading');
 
   /** A title is only asked for once — the first save of a fresh pattern. */
-  readonly needsTitle = computed(() => this._currentBeat() === null);
+  readonly needsTitle = computed(() => this.currentBeat() === null);
 
   /** The grid right now, in the shape the server stores. */
   private readonly currentState = computed(() =>
@@ -83,13 +91,51 @@ export class BeatsStore {
   }
 
   /**
+   * Re-attach the beat the grid came from, once the session is known. Called by
+   * the page that displays it rather than driven by an effect watching the
+   * session: an effect here would write state in response to a signal, which
+   * hides *when* the write happens and makes the order of two stores' reactions
+   * something you have to reason about instead of read.
+   *
+   * `restore()` is memoised, so awaiting it is both the wait for "is anyone
+   * signed in" and the answer. Safe to call again — it returns early once a
+   * beat is attached.
+   *
+   * Only the id survived the reload, so the beat is fetched back, which doubles
+   * as the check that it still exists and is still ours. Anything else and we
+   * quietly let go: a stale pointer would make the next save patch a row that
+   * is gone or somebody else's.
+   */
+  async syncWithSession(): Promise<void> {
+    await this.auth.restore();
+
+    const id = this.storage.recallBeat();
+    if (!this.auth.isSignedIn() || id === null || this._currentBeat() !== null) return;
+
+    try {
+      const beat = await firstValueFrom(this.api.getBeat(id));
+
+      this._currentBeat.set(beat);
+
+      // Baseline against what was SAVED, not against the grid. The grid was
+      // restored from localStorage and may have moved on since the last save —
+      // in which case "unsaved changes" is exactly what it should say.
+      const saved = this.storage.parse(beat.data);
+      this._baseline.set(JSON.stringify(saved ?? this.currentState()));
+    } catch {
+      this.storage.rememberBeat(null);
+    }
+  }
+
+  /**
    * Create the beat, or update it if this pattern has already been saved.
    * `title` is required for the first save and ignored afterwards: renaming is
    * a separate act, and silently retitling on every save would surprise people.
    */
   async save(title?: string): Promise<boolean> {
     const data: BeatData = this.currentState();
-    const existing = this._currentBeat();
+    // the gated one: signed out there is nothing to patch, so a save creates
+    const existing = this.currentBeat();
 
     this._status.set('saving');
     this._error.set(null);
@@ -216,6 +262,7 @@ export class BeatsStore {
     this._currentBeat.set(null);
     this._status.set('idle');
     this._error.set(null);
+    this.storage.rememberBeat(null);
     this.rebaseline();
   }
 
@@ -226,6 +273,7 @@ export class BeatsStore {
 
   private adopt(beat: Beat): void {
     this._currentBeat.set(beat);
+    this.storage.rememberBeat(beat.id);
     this.rebaseline();
   }
 

@@ -26,6 +26,12 @@ locally; the server is what lets a person keep named beats across devices.
    imports anything higher. (See `claude-docs/05-architecture.md`.)
 2. **Tone.js lives in exactly one place:** `src/app/audio/`. No other file imports
    `tone`. The rest of the app uses the `AudioEngine` interface only.
+   Watch the *import graph*, not just the rule: `TransportStore` reading the playhead
+   from `AudioEngine` would pull `tone` into every test that touches transport state,
+   and the ones that replace `tone` with fakes then fail at random depending on which
+   file loads first. The playhead therefore lives in `audio/playhead.ts`, a holder that
+   imports nothing but Angular — the same shape as `api/access-token.ts`, and for the
+   same reason.
 3. **`HttpClient` lives in exactly one place:** `src/app/api/`. Components and stores
    never call it directly — they go through `ApiClient`. Same quarantine logic as Tone.js:
    one folder to change, and the whole server is trivially fakeable in tests.
@@ -43,6 +49,15 @@ locally; the server is what lets a person keep named beats across devices.
 - **Standalone components only** — no NgModules.
 - **Signals for all reactive state** — `signal`, `computed`, `effect`. No
   RxJS `BehaviorSubject` for app state.
+- **Do not set state from an `effect`** (decided 2026-11-22). If one signal can be
+  worked out from others, make it a `computed`; if something must happen when a person
+  does something, call it from the thing they did. An effect that writes hides *when*
+  the write happens and turns the order of two reactions into something you have to
+  reason about rather than read. `effect` is for pushing into the world outside signals
+  — the audio engine, `localStorage`, focus — not for keeping state in step.
+  One known exception: `auth.store.ts` watches the token signal to notice a session the
+  interceptor dropped. The interceptor lives in `api/`, which may not import from `state/`,
+  so a shared signal is the only channel between them — see **Session handling**.
 - **Zoneless** — do not add `zone.js`; do not rely on Zone-based change detection.
 - **New control flow** in templates — `@if`, `@for`, `@switch`. Never `*ngIf`/`*ngFor`.
 - **OnPush** change detection on every component.

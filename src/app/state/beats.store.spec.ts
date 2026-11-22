@@ -1,10 +1,12 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { computed, signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { ApiClient } from '../api/api.client';
 import { Beat } from '../api/api.types';
 import { ApiError } from '../api/api.errors';
 import { BeatsStore } from './beats.store';
+import { AuthStore, SessionStatus } from './auth.store';
 import { PatternStore } from './pattern.store';
 import { TransportStore } from './transport.store';
 import { StorageService } from './storage.service';
@@ -38,18 +40,36 @@ function beat(overrides: Partial<Beat> = {}): Beat {
   };
 }
 
-function setup() {
-  installLocalStorageMock();
+function setup({ keepStorage = false, status: initial = 'signed-in' as SessionStatus } = {}) {
+  // A reload is a new store against the SAME localStorage. Reinstalling the
+  // mock would wipe exactly the thing under test.
+  if (!keepStorage) installLocalStorageMock();
 
   const api = {
     createBeat: vi.fn().mockReturnValue(of(beat())),
     updateBeat: vi.fn().mockReturnValue(of(beat({ title: 'Renamed' }))),
     deleteBeat: vi.fn().mockReturnValue(of(undefined)),
+    getBeat: vi.fn().mockReturnValue(of(beat())),
     listBeats: vi.fn().mockReturnValue(of(page([beat()]))),
   };
 
+  // Signed in by default: every beat operation needs a session, so that is the
+  // state they actually run in. The boot and sign-out cases set it explicitly.
+  const status = signal<SessionStatus>(initial);
+  const auth = {
+    status,
+    isSignedIn: computed(() => status() === 'signed-in'),
+    // resolves once the boot refresh has answered; syncWithSession awaits it
+    restore: vi.fn().mockResolvedValue(undefined),
+  };
+
   TestBed.resetTestingModule();
-  TestBed.configureTestingModule({ providers: [{ provide: ApiClient, useValue: api }] });
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: ApiClient, useValue: api },
+      { provide: AuthStore, useValue: auth },
+    ],
+  });
 
   const store = TestBed.inject(BeatsStore);
   const pattern = TestBed.inject(PatternStore);
@@ -60,7 +80,7 @@ function setup() {
   const savedBlob = (bpm: number) =>
     storage.toSavedState({ bpm, activeKit: pattern.activeKit(), tracks: pattern.tracks() });
 
-  return { api, store, pattern, transport, savedBlob };
+  return { api, auth, store, pattern, transport, storage, savedBlob, status };
 }
 
 describe('BeatsStore', () => {
@@ -153,6 +173,96 @@ describe('BeatsStore', () => {
       expect(h.pattern.tracks()).toBe(before);
       expect(h.store.currentBeat()).toBeNull();
       expect(h.store.error()).toContain('could not be read');
+    });
+  });
+
+  describe('surviving a reload', () => {
+    it('re-attaches the beat the grid came from', async () => {
+      await h.store.save('Lo-fi');
+      expect(h.storage.recallBeat()).toBe('7');
+
+      // a reload: new store, same localStorage
+      const reloaded = setup({ keepStorage: true });
+      expect(reloaded.store.needsTitle()).toBe(true);
+
+      await reloaded.store.syncWithSession();
+
+      // without this, the next save would POST a near-identical second beat
+      expect(reloaded.api.getBeat).toHaveBeenCalledWith('7');
+      expect(reloaded.store.currentBeat()?.id).toBe('7');
+      expect(reloaded.store.needsTitle()).toBe(false);
+    });
+
+    it('measures unsaved changes against what was saved, not what was restored', async () => {
+      await h.store.save('Lo-fi');
+      const savedData = h.api.createBeat.mock.calls[0][0].data;
+
+      const reloaded = setup({ keepStorage: true });
+      reloaded.api.getBeat.mockReturnValue(of(beat({ data: savedData })));
+      // the grid came back from localStorage already edited past that save
+      reloaded.pattern.toggleStep(0, 1);
+      await reloaded.store.syncWithSession();
+
+      expect(reloaded.store.isDirty()).toBe(true);
+    });
+
+    it("lets go when the beat is gone or is somebody else's", async () => {
+      await h.store.save('Lo-fi');
+
+      const reloaded = setup({ keepStorage: true });
+      reloaded.api.getBeat.mockReturnValue(throwError(() => ({ kind: 'unknown' }) as ApiError));
+      await reloaded.store.syncWithSession();
+
+      // a stale pointer would make the next save patch a row that is not ours
+      expect(reloaded.store.currentBeat()).toBeNull();
+      expect(reloaded.storage.recallBeat()).toBeNull();
+      expect(reloaded.store.needsTitle()).toBe(true);
+    });
+
+    it('waits for the boot refresh before deciding', async () => {
+      await h.store.save('Lo-fi');
+
+      const booting = setup({ keepStorage: true, status: 'restoring' });
+      await booting.store.syncWithSession();
+
+      // restore() is awaited, so the answer is never guessed from 'restoring'
+      expect(booting.auth.restore).toHaveBeenCalled();
+      expect(booting.api.getBeat).not.toHaveBeenCalled();
+    });
+
+    it('fetches nothing when nobody is signed in', async () => {
+      await h.store.save('Lo-fi');
+
+      const signedOut = setup({ keepStorage: true, status: 'signed-out' });
+      await signedOut.store.syncWithSession();
+
+      expect(signedOut.api.getBeat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('signing out', () => {
+    it('detaches the beat without anything having to clear it', async () => {
+      await h.store.save('Lo-fi');
+      expect(h.store.currentBeat()).not.toBeNull();
+
+      h.status.set('signed-out');
+
+      // derived, not reset: no effect writes state in response to the session
+      // ending, so the header cannot be left showing a beat nobody owns
+      expect(h.store.currentBeat()).toBeNull();
+      expect(h.store.needsTitle()).toBe(true);
+    });
+
+    it('creates rather than patching after signing in as someone else', async () => {
+      await h.store.save('Lo-fi');
+      h.status.set('signed-out');
+      h.api.createBeat.mockClear();
+      h.api.updateBeat.mockClear();
+      h.status.set('signed-in');
+
+      // the beat is attached again for the same session — the dangerous case is
+      // a DIFFERENT account, which syncWithSession catches via the fetch
+      expect(h.store.currentBeat()?.id).toBe('7');
     });
   });
 

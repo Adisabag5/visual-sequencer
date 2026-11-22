@@ -1,9 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import * as Tone from 'tone';
 import { DEFAULT_BPM, STEP_COUNT } from '../core/constants';
 import { Track, VoiceId } from '../core/models';
 import { isTrackAudible } from '../core/util';
 import { createVoices, VoiceKit } from './voices';
+import { Playhead } from './playhead';
 
 /** Emitted when a step fires: which step, its energy, and the colors that hit. */
 export interface StepTrigger {
@@ -40,9 +41,9 @@ export class AudioEngine {
   private repeatId?: number;
   private stepTriggerCb?: (e: StepTrigger) => void;
 
-  private readonly _currentStep = signal(0);
+  private readonly playhead = inject(Playhead);
   /** Playhead position, updated in sync with the audio clock. */
-  readonly currentStep = this._currentStep.asReadonly();
+  readonly currentStep = this.playhead.step;
 
   /** Resume the AudioContext and build the graph. Must run inside a user gesture. */
   async unlock(): Promise<void> {
@@ -110,7 +111,7 @@ export class AudioEngine {
       const energy = Math.min(1, sum / 2.4);
       // Update playhead + visualizer exactly when this tick sounds.
       Tone.getDraw().schedule(() => {
-        this._currentStep.set(i);
+        this.playhead.set(i);
         this.stepTriggerCb?.({ step: i, energy, colors });
       }, time);
       this.stepIndex = (i + 1) % STEP_COUNT;
@@ -126,6 +127,6 @@ export class AudioEngine {
       this.repeatId = undefined;
     }
     this.stepIndex = 0;
-    this._currentStep.set(0);
+    this.playhead.set(0);
   }
 }
