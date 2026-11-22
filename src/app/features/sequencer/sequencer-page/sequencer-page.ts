@@ -47,8 +47,6 @@ export class SequencerPage {
 
     // Keep the engine's scheduler snapshot in sync with the pattern.
     effect(() => this.engine.loadPattern(this.pattern.tracks()));
-    // Mirror the engine's playhead into the transport store (drives the UI).
-    effect(() => this.transport.setCurrentStep(this.engine.currentStep()));
     // Keep the engine tempo in sync with the store.
     effect(() => this.engine.setBpm(this.transport.bpm()));
     // Auto-save (debounced inside the service, which owns the schema).
