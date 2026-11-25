@@ -12,42 +12,20 @@ import {
 } from './api.types';
 import { toApiError } from './api.errors';
 
-/**
- * Marks a request the auth interceptor must leave alone. Without it, refreshing
- * after a 401 would itself 401 and refresh again, forever.
- */
 export const SKIP_AUTH = new HttpContextToken<boolean>(() => false);
 
 const skipAuth = () => new HttpContext().set(SKIP_AUTH, true);
 
-/** Transport failures become domain errors here, so no layer above sees a status code. */
 const asApiError = <T>() =>
   catchError<T, Observable<never>>((error: unknown) => throwError(() => toApiError(error)));
 
-/**
- * The only place HttpClient is imported. Everything above talks to the server
- * through these methods, which means the whole backend is one fake away in tests.
- */
 @Injectable({ providedIn: 'root' })
 export class ApiClient {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
-  /**
-   * The refresh currently in flight, shared by every caller.
-   *
-   * Without this, two requests failing with 401 at once each POST /auth/refresh
-   * with the same cookie. The server rotates on the first one, so the second
-   * presents an already-rotated token — which it correctly reads as theft and
-   * answers by revoking every session the person has. Concurrency on the client
-   * would log them out everywhere.
-   */
   private inFlightRefresh: Observable<AuthResponse> | null = null;
 
-  /**
-   * withCredentials is mandatory on every auth call: the refresh token is an
-   * httpOnly cookie, and the browser only sends it cross-origin when asked.
-   */
   signUp(credentials: Credentials): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/auth/signup`, credentials, {
