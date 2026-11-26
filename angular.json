@@ -9,7 +9,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "angular-starter-template": {
+    "pulse": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -70,10 +70,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "angular-starter-template:build:production"
+              "buildTarget": "pulse:build:production"
             },
             "development": {
-              "buildTarget": "angular-starter-template:build:development"
+              "buildTarget": "pulse:build:development"
             }
           },
           "defaultConfiguration": "development"
